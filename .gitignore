@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#vitualenv
+myvenv/
+
+.vscode/
+
+shopee_crawler/backup_codes/
+
+shopee_crawler/temp_csvs_for_test/
