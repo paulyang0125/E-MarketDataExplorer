@@ -10,10 +10,13 @@
 
 ####### utilities #########
 import platform
+import base64
+from io import BytesIO
 import pandas as pd
 from matplotlib.font_manager import FontProperties
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 ####### global or from outside #########
 
@@ -129,12 +132,50 @@ class ShopeeEDA():
         self.process_rating()
         self.create_preprocessed_dataframes()
         # drawing
+        self.prepare_figures_header()
         self.make_figure1()
         self.make_figure2()
         self.make_figure3()
         self.make_figure4()
         self.make_figure5()
         self.make_figure6()
+
+    #still doing, not testing it yet
+    def make_figures(self,charts:list) -> None:
+        """ test """
+        candidates = [self.make_figure1.__name__, self.make_figure2.__name__, \
+            self.make_figure3.__name__]
+        #for i in range(len(charts)):
+        for index, chart in enumerate(charts):
+            if charts[index] in candidates:
+                chart()
+
+    '''
+    def foundPerson(self,people):
+        """ substitute algorithms example - https://refactoring.guru/substitute-algorithm """
+        candidates = ["Don", "John", "Kent"]
+        for i in range(len(people)):
+            if people[i] in candidates:
+                return people[i]
+        return ""
+    '''
+
+    def prepare_figures_header(self):
+        """ test """
+        html = '<h1 style="font-size:60px; text-align:center;">Shopee EDA charts</h1>\n'
+        with open('test.html','w',encoding="utf-8") as htm_file:
+            htm_file.write(html)
+
+    def make_pics_html(self, fig_object,num):
+        """ test """
+        tmpfile = BytesIO()
+        fig_object.savefig(tmpfile, format='png')
+        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
+        #html = '<img src=\'data:image/png;base64,{}\'>\n'.format(encoded)
+        html = f'<img src=\'data:image/png;base64,{encoded}\'>\n'
+        with open('test.html','a',encoding="utf-8") as htm_file:
+            htm_file.write(html)
+        fig_object.savefig(f'figure{str(num)}.png', bbox_inches='tight')
 
     def make_figure1(self):
         """ test """
@@ -146,7 +187,8 @@ class ShopeeEDA():
         plt.xlabel("價格",fontsize=20,) #x的標題
         plt.grid(True) # grid 開啟
         plt.tight_layout()
-        plt.savefig('figure1.png', bbox_inches='tight')
+        self.make_pics_html(plt,1)
+
 
     def make_figure2(self):
         """ test """
@@ -160,7 +202,7 @@ class ShopeeEDA():
         plt.xlabel("評分",fontsize=20,fontproperties=self.myfont) #x的標題
         plt.grid(True) # grid 開啟
         plt.tight_layout()
-        plt.savefig('figure2.png', bbox_inches='tight')
+        self.make_pics_html(plt,2)
 
     def make_figure3(self):
         """ test """
@@ -177,7 +219,8 @@ class ShopeeEDA():
         plt.ylabel("總購買金額",fontsize=20,fontproperties=self.myfont) #x的標題
         plt.grid(True) # grid 開啟
         plt.tight_layout()
-        plt.savefig('figure3.png', bbox_inches='tight')
+        self.make_pics_html(plt,3)
+
 
     def make_figure4(self):
         """ test """
@@ -191,7 +234,8 @@ class ShopeeEDA():
         plt.ylabel("人數",fontsize=20,fontproperties=self.myfont) #x的標題
         plt.grid(True) # grid 開啟
         plt.tight_layout()
-        plt.savefig('figure4.png', bbox_inches='tight')
+        self.make_pics_html(plt,4)
+
 
     def make_figure5(self):
         """ test """
@@ -207,7 +251,7 @@ class ShopeeEDA():
 
             for j in i:
                 # 如果沒有重複，則將「新的tag」新增進去tag陣列
-                if j not in tag:
+                if j not in tag and j:
                     tag.append(j)
                     count.append(1)
                     like.append(l)
@@ -215,27 +259,32 @@ class ShopeeEDA():
 
                 # 如果該tag先前已經有重複，則將其從過往的陣列索引（index）中找出，對count、like、sale三個變數再行加總
                 else:
-                    count[tag.index(j)] = count[tag.index(j)]+1
-                    like[tag.index(j)] = like[tag.index(j)]+l
-                    sale[tag.index(j)] = sale[tag.index(j)]+h
+                    if j:
+                        count[tag.index(j)] = count[tag.index(j)]+1
+                        like[tag.index(j)] = like[tag.index(j)]+l
+                        sale[tag.index(j)] = sale[tag.index(j)]+h
 
         dic = {
-            'Tag':tag,
+            #'Tag':[x for x in tag if x],
+            'Tag': tag,
             '總使用數量':count,
             '總喜歡數':like,
             '總銷量':sale
             }
+
         self.tag_data = pd.DataFrame(dic)
         self.tag_data =  self.tag_data.sort_values(by=['總使用數量'], ascending = False)
-
+        print(self.tag_data['Tag'][:10])
         plt.figure( figsize = (10,6))
         plt.bar(self.tag_data['Tag'][:10],  self.tag_data['總使用數量'][:10])
         plt.title("Tag使用排行",fontsize=30,fontproperties=self.myfont)#標題
-        plt.xlabel("Tag名稱",fontsize=20,)#y的標題
-        plt.ylabel("總使用數量",fontsize=20,) #x的標題
+        plt.xlabel("Tag名稱",fontsize=20,fontproperties=self.myfont)#y的標題
+        plt.ylabel("總使用數量",fontsize=20,fontproperties=self.myfont) #x的標題
         plt.xticks(fontsize=20,rotation=90)
         plt.tight_layout()
-        plt.savefig('figure5.png', bbox_inches='tight')
+        self.make_pics_html(plt,5)
+
+
 
     def make_figure6(self):
         """ test """
@@ -250,8 +299,7 @@ class ShopeeEDA():
         plt.ylabel("總銷量",fontsize=20,) #x的標題
         plt.grid(True) # grid 開啟
         plt.tight_layout()
-        plt.savefig('figure6.png', bbox_inches='tight')
-
+        self.make_pics_html(plt,6)
 
 ###test###
 
@@ -267,11 +315,11 @@ else:
     theOS = '/'
     ecode = 'utf-8'
 
-myfont = FontProperties(fname='tools'+ theOS + 'msj.ttf')
+font = FontProperties(fname='tools'+ theOS + 'msj.ttf')
 
 #讀取原始檔案
 test_comments = pd.read_csv('data' + theOS + '蝦皮_運動內衣_留言資料.csv',encoding = ecode, engine= 'python')
 test_contents = pd.read_csv('data' + theOS + '蝦皮_運動內衣_商品資料.csv',encoding = ecode, engine= 'python')
 
-shopee_eda_instance = ShopeeEDA(test_comments,test_contents,myfont)
+shopee_eda_instance = ShopeeEDA(test_comments,test_contents,font)
 shopee_eda_instance.do_eda()
