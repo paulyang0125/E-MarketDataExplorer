@@ -9,6 +9,7 @@
 """ The implementation of Shopee EDA """
 
 ####### utilities #########
+import random
 import platform
 import base64
 from io import BytesIO
@@ -18,6 +19,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+
+'''
+objectives:
+
+a. data preprocessing
+b. create the following figures
+    1. Price vs. Historical Sales - the analsys of product price and sales
+    2. Star Rating vs. Sum of Rating Items - the comparison of rating products
+    3. Total amount of money spent vs. Average purchase price - the Summary of Consumer Purchasing Power
+    4. Average purchase price vs. Total amount of customer - the Deep-dive of Consumer Purchasing Power
+    5. Tag Name vs. Total usage - the tag rankings
+    6. Total amount of a tag vs. total amount of sales - the corelationship of tags and sales
+
+'''
+
 ####### global or from outside #########
 
 
@@ -25,11 +41,15 @@ class ShopeeEDA():
     """ test """
     ####### contant and Instance Variables ########
 
-    def __init__(self, comments, contents,myfont):
+    def __init__(self,charts, comments, contents,myfont,chart_color=None):
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
-        self.colors_group = ['#427f8f','#4a8fa1','#559db0','#66a7b8','#77b1c0','#89bbc8','#9ac5d0',\
-        '#bdd9e0','#cee3e8','#e0edf0']
+        if not chart_color:
+            self.colors_group = ['#427f8f','#8B0000','#559db0','#8B0000','#0000FF','#FF6347',\
+            '#006400','#4682B4','#4169E1','#D2691E']
+            self.chart_color = self.rotate_color()
+        else:
+            self.chart_color = chart_color
         self.comments = comments
         self.contents = contents
         self.myfont = myfont
@@ -37,45 +57,27 @@ class ShopeeEDA():
         self.comments_final = pd.DataFrame()
         self.tag_data = pd.DataFrame()
         self.consumer_power = pd.DataFrame()
+        self.charts = charts
+
+    def rotate_color(self):
+        """ test """
+        color_index = random.randint(0, len(self.colors_group) - 1)
+        print("New color index: " + str(color_index))
+        return self.colors_group[color_index]
 
     def clean_data(self):
         """ test """
-        self.contents= self.contents.rename(columns = {'itemid':'商品ID', # 關聯留言資料時可以用
-                                    'price':'價格', # 計算市場區隔用
-                                    'shopid':'賣家ID', # 關聯資料用
-                                    'brand':'品牌', # 進行市場定位時可以進行競爭比較
-                                    'articles':'商品文案', # 爲消費者定義tag可以用
-                                    'liked_count':'喜愛數量', # 蝦皮網站基礎分析
-                                    'historical_sold':'歷史銷售量', # 計算市場區隔用
-                                    'name':'商品名稱'}  ) # 計算市場區隔用
-        # 將價格除以100000，然後存回價格欄位
-        self.contents['價格'] = self.contents['價格'] / 100000
-
-        self.comments = self.comments.rename(columns = {
-                'itemid':'商品ID',
-                'shopid':'賣家ID',
-                'userid':'使用者ID',
-                'ctime':'留言時間',
-                'is_hidden':'是否隱藏',
-                'orderid':'訂單編號',
-                'rating_star':'給星',
-                'comment':'留言內容',
-                'product_items':'商品規格'
-            })
-
-
-
+        # divide price by 100000
+        self.contents['price'] = self.contents['price'] / 100000
 
 
     def create_tags(self):
         """ test """
-        # 處理Tag
         tag_list = []
-        for i in self.contents['商品文案']:
+        for i in self.contents['articles']:
             if isinstance(i,str):
                 tagg = i.split('#')
                 tagg = tagg[1::]
-                # 將空白取代掉
                 tagg = [g.replace(' ','') for g in tagg]
             else:
                 tagg = []
@@ -94,71 +96,60 @@ class ShopeeEDA():
     def process_rating(self):
         """把欄位的內容放入evaluation方法進行轉換"""
         self.contents['item_rating'] = self.contents['item_rating'].apply(self.evaluation)
-        # 將item_rating字典裏面的rating_star取出，並命名爲「評分」
-        self.contents['評分'] = self.contents['item_rating'].apply(lambda x:x['rating_star'])
-        self.contents['評價數量'] = self.contents['item_rating'].apply(lambda x:np.sum( \
+        self.contents['rating_star'] = self.contents['item_rating']\
+            .apply(lambda x:x['rating_star'])
+        self.contents['rating_numbers'] = self.contents['item_rating']\
+            .apply(lambda x:np.sum( \
         x['rating_count']))
 
     def create_preprocessed_dataframes(self):
         """ test """
-        # 將sku（商品規格）融入content裏面
-        comment_sku = self.comments.drop_duplicates('商品ID')
-        self.contents = self.contents.merge(comment_sku[['商品ID', '商品規格']], how = 'left', on='商品ID')
-        # 特別將content的部分欄位取出
-        self.contents_final = self.contents[['商品ID','商品名稱','品牌','Tag' ,'價格', '歷史銷售量',\
-            '商品文案', '賣家ID','評價數量','評分','喜愛數量']]
-        # 將content的'商品ID', '價格','折扣'融入到comment
-        self.comments = self.comments.merge(self.contents[['商品ID', '價格','商品名稱']], how = 'left' \
-            , on='商品ID')
-        # 問題：有一些comment是重複爬取的要刪除,並存回
+        # put sku（商品規格）into content
+        comment_sku = self.comments.drop_duplicates('itemid')
+        self.contents = self.contents.merge(comment_sku[['itemid', 'product_items']], \
+        how = 'left', on='itemid')
+        # get out the key columns from contents
+        self.contents_final = self.contents[['itemid','name','brand','Tag' ,'price', \
+            'historical_sold',\
+            'articles', 'shopid','rating_numbers','rating_star','liked_count']]
+        # mege content的'itemid', 'price','name'to comment
+        self.comments = self.comments.merge(self.contents[['itemid', 'price','name']], \
+        how = 'left', on='itemid')
+        # issue：remove duplicatied items
         # hint：drop_duplicates
         self.comments = self.comments.drop_duplicates()
-        # 特別將comment的部分欄位取出
-        self.comments_final = self.comments[['商品ID',	'賣家ID',	'商品名稱',	'價格',	'使用者ID', \
-             '留言時間','訂單編號', '給星', '留言內容','商品規格']]
+        # get the key columns for comments_final
+        self.comments_final = self.comments[['itemid',	'shopid',	'name',	'price',\
+            'userid','ctime','orderid', 'rating_star', 'comment','product_items']]
         self.save_preprocessed_dataframes()
 
     def save_preprocessed_dataframes(self):
         """ test """
-        # 問題：將content_final存儲為 '蝦皮_運動內衣_【處理後】商品資料.csv'
-        self.contents_final.to_csv('蝦皮_運動內衣_【處理後】商品資料.csv',encoding = 'UTF-8-sig')
-        self.comments_final.to_csv('蝦皮_運動內衣_【處理後】留言資料.csv',encoding= 'UTF-8-sig')
+        shopee_product_name = "shopee_processed_product_data.csv"
+        shopee_comment_name = "shopee_processed_comment_data.csv"
+        self.contents_final.to_csv(shopee_product_name,encoding = 'UTF-8-sig')
+        self.comments_final.to_csv(shopee_comment_name,encoding= 'UTF-8-sig')
 
     def do_eda(self):
         """ test """
         # preprocessing
+        print("1. start preprocessing!")
         self.clean_data()
         self.create_tags()
         self.process_rating()
         self.create_preprocessed_dataframes()
         # drawing
+        print("2. start drawing!")
         self.prepare_figures_header()
-        self.make_figure1()
-        self.make_figure2()
-        self.make_figure3()
-        self.make_figure4()
-        self.make_figure5()
-        self.make_figure6()
+        self.make_figures(self.charts)
 
-    #still doing, not testing it yet
     def make_figures(self,charts:list) -> None:
         """ test """
-        candidates = [self.make_figure1.__name__, self.make_figure2.__name__, \
-            self.make_figure3.__name__]
-        #for i in range(len(charts)):
-        for index, chart in enumerate(charts):
-            if charts[index] in candidates:
-                chart()
-
-    '''
-    def foundPerson(self,people):
-        """ substitute algorithms example - https://refactoring.guru/substitute-algorithm """
-        candidates = ["Don", "John", "Kent"]
-        for i in range(len(people)):
-            if people[i] in candidates:
-                return people[i]
-        return ""
-    '''
+        candidates = [self.make_figure1, self.make_figure2, \
+            self.make_figure3,self.make_figure4,self.make_figure5,self.make_figure6]
+        for index, _ in enumerate(charts):
+            if charts[index] in candidates[index].__name__:
+                candidates[index]()
 
     def prepare_figures_header(self):
         """ test """
@@ -180,106 +171,109 @@ class ShopeeEDA():
     def make_figure1(self):
         """ test """
         plt.figure( figsize = (10,6))
-        plt.scatter(self.contents_final['價格'],self.contents_final['歷史銷售量'],
-            color=self.colors_group[0],alpha=0.5)
-        plt.title("商品價格與銷售量分析圖",fontsize=30,)#標題
-        plt.ylabel("銷售量",fontsize=20,)#y的標題
-        plt.xlabel("價格",fontsize=20,) #x的標題
-        plt.grid(True) # grid 開啟
+        plt.scatter(self.contents_final['price'],self.contents_final['historical_sold'],
+            color=self.chart_color,alpha=0.5)
+        plt.title("Analsys of product prices and sales",fontsize=30,)
+        plt.ylabel("Historical Sales",fontsize=20,)
+        plt.xlabel("Price",fontsize=20,)
+        plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,1)
 
 
     def make_figure2(self):
         """ test """
-        product_data_melt_zero = self.contents_final[self.contents_final['評分']>3]
+        product_data_melt_zero = self.contents_final[self.contents_final['rating_star']>3]
         plt.figure( figsize = (10,6))
-        plt.scatter(product_data_melt_zero['評分'],product_data_melt_zero['評價數量'],
-            color=self.colors_group[0],
+        plt.scatter(product_data_melt_zero['rating_star'],product_data_melt_zero['rating_numbers'],
+            color=self.chart_color,
             alpha=0.5)
-        plt.title("商品評分評價比較圖",fontsize=30,fontproperties=self.myfont)#標題
-        plt.ylabel("評價數量",fontsize=20,fontproperties=self.myfont)#y的標題
-        plt.xlabel("評分",fontsize=20,fontproperties=self.myfont) #x的標題
-        plt.grid(True) # grid 開啟
+        plt.title("Comparison of rating products",fontsize=30,fontproperties=self.myfont)
+        plt.ylabel("Sum of Rating Items",fontsize=20,fontproperties=self.myfont)
+        plt.xlabel("Star Rating",fontsize=20,fontproperties=self.myfont)
+        plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,2)
 
     def make_figure3(self):
         """ test """
-        self.consumer_power = self.comments_final[['使用者ID','價格']].groupby("使用者ID").sum()
-        self.consumer_power = pd.concat([self.consumer_power,self.comments_final[['使用者ID','價格'\
-            ]].groupby("使用者ID").mean()], axis=1)
-        self.consumer_power.columns = ['總購買金額','平均購買金額']
+        self.consumer_power = self.comments_final[['userid','price']].groupby('userid').sum()
+        self.consumer_power = pd.concat([self.consumer_power,self.comments_final[['userid',\
+            'price']].groupby('userid').mean()], axis=1)
+        self.consumer_power.columns = ['total_amount_of_money_spent','avg_purchase_price']
         plt.figure( figsize = (10,6))
-        plt.scatter(self.consumer_power['平均購買金額'],self.consumer_power['總購買金額'],
-            color=self.colors_group[0],
+        plt.scatter(self.consumer_power['avg_purchase_price'],self.consumer_power\
+            ['total_amount_of_money_spent'],
+            color=self.chart_color,
             alpha=0.5)
-        plt.title("消費者購買力分析圖",fontsize=30,fontproperties=self.myfont)#標題
-        plt.xlabel("平均購買金額",fontsize=20,fontproperties=self.myfont)#y的標題
-        plt.ylabel("總購買金額",fontsize=20,fontproperties=self.myfont) #x的標題
-        plt.grid(True) # grid 開啟
+        plt.title("Summary of Consumer Purchasing Power",fontsize=30,fontproperties=self.myfont)
+        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.myfont)
+        plt.ylabel("Total amount of money spent",fontsize=20,fontproperties=self.myfont)
+        plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,3)
 
 
     def make_figure4(self):
         """ test """
-        consumer_power_interval = pd.DataFrame(self.consumer_power['平均購買金額'].value_counts())
+        consumer_power_interval = pd.DataFrame(self.consumer_power['avg_purchase_price']\
+            .value_counts())
         consumer_power_interval.sort_index(inplace=True)
-        consumer_power_interval.columns = ['每個平均價格下的購買人數']
+        consumer_power_interval.columns = ['total_amount_of_customer']
         plt.figure( figsize = (10,6))
-        plt.plot(consumer_power_interval.index,consumer_power_interval,color=self.colors_group[0])
-        plt.title("消費者購買力剖析（價格區間）",fontsize=30,fontproperties=self.myfont)#標題
-        plt.xlabel("平均購買金額",fontsize=20,fontproperties=self.myfont)#y的標題
-        plt.ylabel("人數",fontsize=20,fontproperties=self.myfont) #x的標題
-        plt.grid(True) # grid 開啟
+        plt.scatter(consumer_power_interval.index,consumer_power_interval,color=self.chart_color)
+        plt.title("Deep-dive of Consumer Purchasing Power",fontsize=30,fontproperties=self\
+            .myfont)
+        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.myfont)
+        plt.ylabel("Total amount of customer",fontsize=20,fontproperties=self.myfont)
+        plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,4)
 
 
     def make_figure5(self):
         """ test """
-        tag = []
-        count = []
-        like = []
-        sale = []
-        for i,l,h in zip(self.contents_final['Tag'].tolist(), self.contents_final['喜愛數量'].tolist()\
-            ,self.contents_final['歷史銷售量'].tolist()):
+        tags_list = []
+        count_list = []
+        like_list = []
+        sale_list = []
+        for tags,likes,his_sold in zip(self.contents_final['Tag'].tolist(), \
+            self.contents_final['liked_count'].tolist()\
+            ,self.contents_final['historical_sold'].tolist()):
             #print("i: " + str(type(i)))
-            if not isinstance(i, list):
-                i = eval(i)
+            if not isinstance(tags, list):
+                tags = eval(tags)
 
-            for j in i:
-                # 如果沒有重複，則將「新的tag」新增進去tag陣列
-                if j not in tag and j:
-                    tag.append(j)
-                    count.append(1)
-                    like.append(l)
-                    sale.append(h)
-
-                # 如果該tag先前已經有重複，則將其從過往的陣列索引（index）中找出，對count、like、sale三個變數再行加總
+            for tag in tags:
+                # if not repeate, add the new tag to the four lists
+                if tag not in tags_list and tag:
+                    tags_list.append(tag)
+                    count_list.append(1)
+                    like_list.append(likes)
+                    sale_list.append(his_sold)
+                # if repeate, increase the numbers for that repeated tag in count_list、\
+                # like_list、sale_list
                 else:
-                    if j:
-                        count[tag.index(j)] = count[tag.index(j)]+1
-                        like[tag.index(j)] = like[tag.index(j)]+l
-                        sale[tag.index(j)] = sale[tag.index(j)]+h
+                    if tag:
+                        count_list[tags_list.index(tag)] = count_list[tags_list.index(tag)]+1
+                        like_list[tags_list.index(tag)] = like_list[tags_list.index(tag)]+likes
+                        sale_list[tags_list.index(tag)] = sale_list[tags_list.index(tag)]+his_sold
 
         dic = {
-            #'Tag':[x for x in tag if x],
-            'Tag': tag,
-            '總使用數量':count,
-            '總喜歡數':like,
-            '總銷量':sale
+            'Tag': tags_list,
+            'total_usage':count_list,
+            'total_likes':like_list,
+            'sales':sale_list
             }
 
         self.tag_data = pd.DataFrame(dic)
-        self.tag_data =  self.tag_data.sort_values(by=['總使用數量'], ascending = False)
+        self.tag_data =  self.tag_data.sort_values(by=['total_usage'], ascending = False)
         print(self.tag_data['Tag'][:10])
         plt.figure( figsize = (10,6))
-        plt.bar(self.tag_data['Tag'][:10],  self.tag_data['總使用數量'][:10])
-        plt.title("Tag使用排行",fontsize=30,fontproperties=self.myfont)#標題
-        plt.xlabel("Tag名稱",fontsize=20,fontproperties=self.myfont)#y的標題
-        plt.ylabel("總使用數量",fontsize=20,fontproperties=self.myfont) #x的標題
+        plt.bar(self.tag_data['Tag'][:10],  self.tag_data['total_usage'][:10])
+        plt.title("Tag rankings",fontsize=30,fontproperties=self.myfont)
+        plt.xlabel("Tag Name",fontsize=20,fontproperties=self.myfont)
+        plt.ylabel("Total Usage",fontsize=20,fontproperties=self.myfont)
         plt.xticks(fontsize=20,rotation=90)
         plt.tight_layout()
         self.make_pics_html(plt,5)
@@ -289,37 +283,41 @@ class ShopeeEDA():
     def make_figure6(self):
         """ test """
         plt.figure( figsize = (10,6))
-        plt.scatter(self.tag_data['總喜歡數'],self.tag_data['總銷量'],color=self.colors_group[0])
-        plt.title("Tag的喜歡與總銷量比較圖",fontsize=30,fontproperties=self.myfont)#標題
-        for i,j,t in zip(self.tag_data['總喜歡數'],self.tag_data['總銷量'],self.tag_data['Tag']):
-            if i > self.tag_data['總喜歡數'].mean()+self.tag_data['總喜歡數'].std()*1 and j > \
-                self.tag_data['總銷量'].mean()+self.tag_data['總銷量'].std()*1:
-                plt.text(i, j, t, fontsize=12,) # 最後一天的點上方的標籤文字
-        plt.xlabel("總喜歡數",fontsize=20,)#y的標題
-        plt.ylabel("總銷量",fontsize=20,) #x的標題
-        plt.grid(True) # grid 開啟
+        plt.scatter(self.tag_data['total_likes'],self.tag_data['sales'],color=self.chart_color)
+        plt.title("Corelationship between tags and sales",fontsize=30,fontproperties=self.myfont)#標題
+        for like,sale,tag in zip(self.tag_data['total_likes'],self.tag_data['sales'],\
+            self.tag_data['Tag']):
+            if like > self.tag_data['total_likes'].mean()+self.tag_data['total_likes'].std()*1 \
+                and sale > self.tag_data['sales'].mean()+self.tag_data['sales'].std()*1:
+                plt.text(like, sale, tag, fontsize=12,) # annotate the tag name on the last day
+        plt.xlabel("Like Counts",fontsize=20,)
+        plt.ylabel("Total amount of sales",fontsize=20,)
+        plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,6)
 
 ###test###
 
-# 判斷是甚麼作業系統
-theOS = list(platform.uname())[0]
-if theOS == 'Windows':
-    theOS = '\\'
-    ecode = 'utf-8-sig'
-elif theOS == 'Darwin':
-    theOS = '/'
-    ecode = 'utf-8-sig'
-else:
-    theOS = '/'
-    ecode = 'utf-8'
 
-font = FontProperties(fname='tools'+ theOS + 'msj.ttf')
+
+# 判斷是甚麼作業系統
+THE_OS = list(platform.uname())[0]
+if THE_OS == 'Windows':
+    THE_OS = '\\'
+    ECODE = 'utf-8-sig'
+elif THE_OS == 'Darwin':
+    THE_OS = '/'
+    ECODE = 'utf-8-sig'
+else:
+    THE_OS = '/'
+    ECODE = 'utf-8'
+
+font = FontProperties(fname='tools'+ THE_OS + 'msj.ttf')
 
 #讀取原始檔案
-test_comments = pd.read_csv('data' + theOS + '蝦皮_運動內衣_留言資料.csv',encoding = ecode, engine= 'python')
-test_contents = pd.read_csv('data' + theOS + '蝦皮_運動內衣_商品資料.csv',encoding = ecode, engine= 'python')
-
-shopee_eda_instance = ShopeeEDA(test_comments,test_contents,font)
+test_comments = pd.read_csv('data' + THE_OS + '蝦皮_運動內衣_留言資料.csv',encoding = ECODE, engine= 'python')
+test_contents = pd.read_csv('data' + THE_OS + '蝦皮_運動內衣_商品資料.csv',encoding = ECODE, engine= 'python')
+chart_groups = ['make_figure1', 'make_figure2', 'make_figure3','make_figure4',\
+     'make_figure5', 'make_figure6']
+shopee_eda_instance = ShopeeEDA(chart_groups,test_comments,test_contents,font)
 shopee_eda_instance.do_eda()
