@@ -8,6 +8,8 @@
 
 """This module provides the Shopee Data Explorer CLI."""
 # shopee_data_explorer/cli.py
+from email import header
+from typing import Any, Dict, List, NamedTuple
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +20,7 @@ from shopee_data_explorer import (
 )
 
 app = typer.Typer()
-
+#self, ip_addresses: List[str], proxy_auth: str, header: Dict[str, any],path:str
 @app.command()
 def init(
     data_path: str = typer.Option(
@@ -27,9 +29,39 @@ def init(
         "-data",
         prompt="shopee explorer data location?",
     ),
+    ip_addresses: str = typer.Option(
+        str(shopee_crawler.DEFAULT_IP_RANGES),
+        "--ips-range",
+        "-ips",
+        prompt="shopee explorer proxy ip ranges?",
+    ),
+
+    proxy_auth: str = typer.Option(
+        str(shopee_crawler.DEFAULT_PROXY_AUTH),
+        "--proxy-auth",
+        "-proxy",
+        prompt="shopee explorer proxy credential?",
+    ),
+    #my_header: str = typer.Option(
+    #    str(shopee_crawler.DEFAULT_HEADER),
+    #    "--myheader",
+    #    "-header",
+    #    prompt="shopee explorer http/https header?",
+    #),
+
+    webdriver_path: str = typer.Option(
+        str(shopee_crawler.DEFAULT_CHROME_WEBDRIVER),
+        "--webdriver-path",
+        "-webdriver",
+        prompt="shopee explorer webdriver path?",
+    ),
+
 ) -> None:
     """Initialize the shopee explorer data folder."""
-    app_init_error,config_file_path = config.init_app(data_path)
+    app_init_error,config_file_path = config.init_app(data_path=data_path, \
+        ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=shopee_crawler.DEFAULT_HEADER, \
+            webdriver_path=webdriver_path)
+
     if app_init_error:
         typer.secho(
             f'Creating config file failed with "{ERRORS[app_init_error]}"',
@@ -74,6 +106,7 @@ def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
+
 
 @app.callback()
 def main(

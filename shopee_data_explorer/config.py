@@ -21,14 +21,16 @@ from shopee_data_explorer import \
 CONFIG_DIR_PATH = Path(typer.get_app_dir(__app_name__))
 CONFIG_FILE_PATH = CONFIG_DIR_PATH / "config.ini"
 
-def init_app(data_path: str) -> int:
+#def init_app(data_path: str) -> int:
+def init_app(**kwargs) -> int:
     """Initialize the application."""
     config_code, config_file_path = _init_config_file()
     if config_code != SUCCESS:
         return config_code
-    data_code = _create_shopee_data(data_path)
+    data_code = _create_shopee_data(kwargs)
     if data_code != SUCCESS:
         return data_code
+
     return SUCCESS,config_file_path
 
 def _init_config_file() -> int:
@@ -42,9 +44,22 @@ def _init_config_file() -> int:
         return FILE_ERROR
     return SUCCESS, CONFIG_FILE_PATH
 
-def _create_shopee_data(data_path: str) -> int:
-    config_parser = configparser.ConfigParser()
-    config_parser["General"] = {"shopee_data": data_path}
+#config.init_app(data_path=data_path,
+# ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=my_header, \
+# webdriver_path=webdriver_path)
+
+def _create_shopee_data(kwargs: dict) -> int:
+    config_parser = configparser.ConfigParser(interpolation=None)
+    config_parser["General"] = {"shopee_data": kwargs['data_path'],
+                                "ip_addresses": kwargs['ip_addresses'],
+                                "proxy_auth": kwargs['proxy_auth'],
+                                #"my_header": str(kwargs['my_header']),
+                                "webdriver_path": kwargs['webdriver_path']}
+
+    config_parser.add_section('Network-Header')
+    for key in kwargs['my_header'].keys():
+        config_parser.set('Network-Header',key,kwargs['my_header'][key])
+
     try:
         with CONFIG_FILE_PATH.open("w") as file:
             config_parser.write(file)
