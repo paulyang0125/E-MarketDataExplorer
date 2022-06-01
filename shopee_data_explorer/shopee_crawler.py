@@ -8,7 +8,8 @@
 
 """This module provides the Shopee Data Crawler functionality."""
 # shopee_data_explorer/shopee_crawler.py
-
+import time
+import ast
 import configparser
 from pathlib import Path
 import json
@@ -17,22 +18,53 @@ import random
 #from threading import TIMEOUT_MAX
 from typing import Any, Dict, List, NamedTuple, Tuple
 from bs4 import BeautifulSoup
-import time
 
 
 from seleniumwire import webdriver
-
 import requests
-from shopee_data_explorer import (READ_INDEX_ERROR, DATA_FOLDER_WRITE_ERROR, SUCCESS)
+from shopee_data_explorer import (READ_INDEX_ERROR, \
+    DATA_FOLDER_WRITE_ERROR,READ_PRODUCT_ERROR, READ_COMMENT_ERROR,SUCCESS)
 
-#logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-logging.basicConfig(level=logging.DEBUG)
+
+############# LOGGIING #############
+logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
+
+logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
+logger.setLevel(logging.WARNING)  # or any variant from ERROR, CRITICAL or NOTSET
+fh = logging.FileHandler('spam.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+logger.addHandler(ch)
+logger.addHandler(fh)
+
+
 mylogger = logging.getLogger(__name__)
+mylogger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('another_spam.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+mylogger.addHandler(ch)
+mylogger.addHandler(fh)
 
+############# DEFAULT VARS #############
 DEFAULT_KEYWORD = '運動內衣'
 # PAGES stands for the number of pages you want to crawle, 1 page equals to 100 results
 DEFAULT_PAGE_NUM = 1
-DEFAULT_PAGE_LENGTH = 100
+DEFAULT_PAGE_LENGTH = 10
 DEFAULT_IP_RANGES = ['45.136.231.43:7099', '45.142.28.20:8031','45.140.13.112:9125',\
     '45.140.13.119:9132', '45.142.28.83:8094','45.136.231.85:7141']
 DEFAULT_PROXY_AUTH = "ffpswzty:kvenecq9i6tf"
@@ -65,16 +97,22 @@ DEFAULT_HEADER = {'authority' : 'shopee.tw','method': 'GET', \
 
 DEFAULT_CHROME_WEBDRIVER = '/Users/yao-nienyang/Desktop/Workplace/chromedriver'
 
+############# CLASS IMPLEMENTATION #############
+
 class CrawlerResponse(NamedTuple):
     """data model to controller"""
     result: List[Dict[str, Any]]
     error: int
 
+class CrawlerResponseForDict(NamedTuple):
+    """data model to controller"""
+    result: Dict[str, Any]
+    error: int
 
 class CrawlerHandler:
     """ this provides cralwer capabilities to read data from shopee"""
     def __init__(self, ip_addresses: List[str] \
-        , proxy_auth: str,header: Dict[str, str], webdriver_path: str) -> None:
+        , proxy_auth: str,header: Dict[str, any], webdriver_path: str) -> None:
         """ test"""
         self.ip_addresses = ip_addresses
         self.proxy_auth = proxy_auth
@@ -109,6 +147,7 @@ class CrawlerHandler:
     def _setup_chrome_options(self) -> webdriver.ChromeOptions:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
         return chrome_options
 
     def _rotate_ip(self)-> None:
@@ -241,10 +280,7 @@ class CrawlerHandler:
             return CrawlerResponse(container,READ_INDEX_ERROR)
 
 
-
-
-
-    def read_search_indexs(self, keyword: int, page: int, page_length: int) -> CrawlerResponse:
+    def read_search_indexs(self, keyword: str, page: int, page_length: int) -> CrawlerResponse:
         """
         get the serach result
         page_num: the iterated number starting from 0, 1, 2, 3, .....etc
@@ -266,7 +302,10 @@ class CrawlerHandler:
         time_out = 5
         while retries > 0:
             try:
-                mylogger.info("Proxy currently being used: %s", self.instance_proxies['https'])
+                # debug
+                #print("2. header type: " + str(type(self.header)))
+                #print("2. header items: " + str(self.header.items))
+                mylogger.debug("Proxy currently being used: %s", self.instance_proxies['https'])
                 search_results = requests.get(url,headers = self.header, proxies=self.\
                     instance_proxies,timeout=(time_out))
             except requests.Timeout:
@@ -288,20 +327,116 @@ class CrawlerHandler:
             getjson=json.loads(soup.text)
             #debug, will remove
             #print("getjson['items'] type:" + str(type(getjson['items'])))
-            print("getjson['itemid']:" + str(getjson['items'][0]['item_basic']['itemid']))
+            mylogger.debug("getjson['itemid']: %s", str(getjson['items'][0]['item_basic']\
+                ['itemid']))
+            #getjson['items'] is a list
             return CrawlerResponse(getjson['items'],SUCCESS)
         else:
-            return CrawlerResponse({},READ_INDEX_ERROR)
+            mylogger.error('reading the index is failed for keyword %s', keyword)
+            return CrawlerResponse([],READ_INDEX_ERROR)
             #raise Exception('the cralwer cannot get started, probably your network has issue!')
 
 
 
-    def read_good_details(self) -> CrawlerResponse:
-        """test"""
+    def read_good_info(self,shop_id: int, item_id: int) -> CrawlerResponse:
+        """ get the details like articles and SKU """
+
+        url = 'https://shopee.tw/api/v2/item/get?itemid=' + str(item_id) + '&shopid=' + \
+            str(shop_id)
+        mylogger.info('collect good info for shopid %s and itemid %s', str(item_id), str(shop_id))
+        retries = 3
+        goods_details_results = None
+        time_out = 10
+        while retries > 0:
+            try:
+                mylogger.debug("Proxy currently being used - %s", self.instance_proxies['https'])
+                goods_details_results = requests.get(url,headers = self.header,proxies=self.\
+                    instance_proxies,timeout=(time_out))
+            except requests.Timeout:
+                mylogger.warning("requests.Timeout error, looking for another proxy")
+                self._rotate_ip()
+                retries = retries - 1
+            except requests.exceptions.ConnectionError:
+                mylogger.warning("Connection refused, ip may be banned!")
+                self._rotate_ip()
+                retries = retries - 1
+            else:
+                mylogger.info('collecting good info for %s and %s is done ', str(item_id), \
+                    str(shop_id))
+                mylogger.debug('collecting good info took about %s secs', \
+                    str(goods_details_results.elapsed.total_seconds()) )
+
+                #debug
+                #print("goods_details_results.text: ", goods_details_results.text)
+
+                break
+        if goods_details_results is not None:
+            processed_goods = goods_details_results.text.replace("\\n","^n")
+            processed_goods = processed_goods.replace("\\t","^t")
+            processed_goods = processed_goods.replace("\\r","^r")
+            goods_json = json.loads(processed_goods)
+            # debug
+            #print("goods_jsons: ", str(goods_json))
+
+            #return CrawlerResponse(goods_json,SUCCESS)
+            return CrawlerResponseForDict(goods_json,SUCCESS) #goods_json is a dict
+        else:
+            mylogger.error('collecting good info for %s and %s is failed ', str(item_id), \
+                    str(shop_id))
+            #return CrawlerResponse({},READ_PRODUCT_ERROR)
+            return CrawlerResponseForDict({},READ_PRODUCT_ERROR)
 
 
-    def read_good_comments(self) -> CrawlerResponse:
-        """test"""
+    def read_good_comments(self,shop_id: int, item_id: int) -> CrawlerResponse:
+        """get the buyer's comment by using item_id and shop_id"""
+
+        url = 'https://shopee.tw/api/v1/comment_list/?item_id='+ str(item_id) + '&shop_id=' + \
+        str(shop_id) + '&offset=0&limit=200&flag=1&filter=0'
+        mylogger.info('collect good comment for shopid %s and itemid %s', str(item_id), \
+            str(shop_id))
+
+        retries = 3
+        time_out = 15
+        comments_results = None
+        while retries > 0:
+            try:
+                mylogger.debug("Proxy currently being used - %s", self.instance_proxies['https'])
+                comments_results = requests.get(url,headers = self.header,proxies= \
+                    self.instance_proxies,timeout=(time_out))
+            except requests.Timeout:
+                mylogger.warning("requests.Timeout error, looking for another proxy")
+                self._rotate_ip()
+                retries = retries - 1
+            except requests.exceptions.ConnectionError:
+                mylogger.warning("Connection refused, ip may be banned!")
+                self._rotate_ip()
+                retries = retries - 1
+            else:
+                mylogger.info('collecting the comment for %s and %s is done ', str(item_id), \
+                    str(shop_id))
+                mylogger.debug('collecting the comment took about %s secs', \
+                    str(comments_results.elapsed.total_seconds()) )
+                #debug
+                #print("comments_results.text: ", comments_results.text)
+
+                break
+
+        if comments_results is not None:
+            processed_comments_results= comments_results.text.replace("\\n","^n")
+            processed_comments_results=processed_comments_results.replace("\\t","^t")
+            processed_comments_results=processed_comments_results.replace("\\r","^r")
+            comments_json = json.loads(processed_comments_results)
+            # debug
+            #print("comments_jsons: ", str(comments_json))
+            #comments_json['comments'] is a list
+            return CrawlerResponse(comments_json['comments'],SUCCESS)
+        else:
+            mylogger.error('collecting the comment for %s and %s is failed ', str(item_id), \
+                    str(shop_id))
+            return CrawlerResponse([],READ_COMMENT_ERROR)
+
+
+
 
 
 #todo: move the following jobs to config.py or data_builder.py
@@ -314,6 +449,19 @@ def get_data_path(config_file: Path) -> Path:
     config_parser = configparser.ConfigParser()
     config_parser.read(config_file)
     return Path(config_parser["General"]["shopee_data"])
+
+def get_configs_data(config_file: Path) -> Path:
+    """Return the current path to the shopee_data."""
+    config_parser = configparser.ConfigParser(interpolation=None)
+    config_parser.read(config_file)
+    #myheader = dict(config_parser['Network-Header'].items())
+
+    return Path(config_parser["General"]["shopee_data"]),\
+        ast.literal_eval(config_parser["General"]["ip_addresses"]),\
+            config_parser["General"]["proxy_auth"],\
+                 config_parser["General"]["webdriver_path"],\
+                     dict(config_parser['Network-Header'].items())
+
 
 def init_data(data_path: Path) -> int:
     """Create the shopee_data folder."""

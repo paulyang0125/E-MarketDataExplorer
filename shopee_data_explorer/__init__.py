@@ -12,6 +12,7 @@
 __app_name__ = "shopee_data_explorer"
 __version__ = "1.1.0"
 
+#errors defintion
 (
     SUCCESS,
     DIR_ERROR,
@@ -20,7 +21,16 @@ __version__ = "1.1.0"
     NETWORK_CONNECTION_ERROR,
     DATA_FOLDER_WRITE_ERROR,
     READ_INDEX_ERROR,
-) = range(7)
+    READ_PRODUCT_ERROR,
+    READ_COMMENT_ERROR,
+) = range(9)
+
+#mode
+(
+    ALL,
+    PRODUCT_ITEMS,
+    PRODUCT_COMMENTS,
+) = range(3)
 
 ERRORS = {
     DIR_ERROR: "Config directory error",
@@ -29,4 +39,6 @@ ERRORS = {
     NETWORK_CONNECTION_ERROR: "Connection refused. IP may be banded or network doesn't work",
     DATA_FOLDER_WRITE_ERROR: "data folder write error",
     READ_INDEX_ERROR: "read the index error",
+    READ_PRODUCT_ERROR: "read the product detail error",
+    READ_COMMENT_ERROR: "read the comment error",
 }
