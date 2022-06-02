@@ -8,8 +8,7 @@
 
 """This module provides the Shopee Data Explorer CLI."""
 # shopee_data_explorer/cli.py
-from email import header
-from typing import Any, Dict, List, NamedTuple
+from typing import Dict, List
 from pathlib import Path
 from typing import Optional
 import typing
@@ -17,7 +16,7 @@ import typing
 import typer
 
 from shopee_data_explorer import (
-    ERRORS, __app_name__, __version__, config, shopee_crawler, shopee_data_explorer
+    ERRORS, __app_name__, __version__, database, config, shopee_crawler, shopee_data_explorer
 )
 
 app = typer.Typer()
@@ -29,6 +28,12 @@ def init(
         "--data-path",
         "-data",
         prompt="shopee explorer data location?",
+    ),
+     db_path: str = typer.Option(
+        str(database.DEFAULT_DB_FILE_PATH),
+        "--db-path",
+        "-db",
+        prompt="explorer database location?",
     ),
     ip_addresses: str = typer.Option(
         str(shopee_crawler.DEFAULT_IP_RANGES),
@@ -57,11 +62,13 @@ def init(
         prompt="shopee explorer webdriver path?",
     ),
 
+    data_source: int = typer.Option(1, "--data_source", "-d", min=1, max=3),
+
 ) -> None:
     """Initialize the shopee explorer data folder."""
     app_init_error,config_file_path = config.init_app(data_path=data_path, \
         ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=shopee_crawler.DEFAULT_HEADER, \
-            webdriver_path=webdriver_path)
+            webdriver_path=webdriver_path,data_source=data_source,db_path=db_path)
 
     if app_init_error:
         typer.secho(
@@ -90,7 +97,7 @@ def get_explorer() -> shopee_data_explorer.Explorer:
     #header: Dict[str, any], webdriver_path:str) -> None:
     if config.CONFIG_FILE_PATH.exists():
         #data_path = shopee_crawler.get_data_path(config.CONFIG_FILE_PATH)
-        (data_path, ip_addresses,proxy_auth,webdriver_path,my_header) = \
+        data_path,ip_addresses,proxy_auth,webdriver_path,data_source,db_path,my_header = \
             shopee_crawler.get_configs_data(config.CONFIG_FILE_PATH)
 
     #debug
@@ -109,10 +116,11 @@ def get_explorer() -> shopee_data_explorer.Explorer:
             fg=typer.colors.RED,
         )
         raise typer.Exit(1)
+    print("data_source: ", data_source)
     if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
-        and webdriver_path and isinstance(my_header,Dict):
-        return shopee_data_explorer.Explorer(data_path, ip_addresses,proxy_auth,\
-            my_header,webdriver_path)
+        and webdriver_path and isinstance(my_header,Dict) and data_source:
+        return shopee_data_explorer.Explorer(data_path,db_path,ip_addresses,proxy_auth,my_header,\
+            webdriver_path, int(data_source))
     else:
         typer.secho(
             'the config arguments data not found. Please, run "shopee_data_explorer init"',
@@ -192,8 +200,8 @@ def read_search(
 #DEFAULT_PAGE_LENGTH = 10
 def scrap(
     required_args :List[str] = typer.Argument(...),
-    source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
-    mode: int = typer.Option(0, "--scrap_mode_for_shopee", "-sm", min=0, max=2),
+    #source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
+    mode: int = typer.Option(1, "--scrap_mode_for_shopee", "-sm", min=1, max=3),
     searcher_type: int = typer.Option(1, "--searcher_type", "-st", min=1, max=2),
     retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
 ) -> None:

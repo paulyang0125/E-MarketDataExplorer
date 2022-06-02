@@ -23,14 +23,39 @@ __version__ = "1.1.0"
     READ_INDEX_ERROR,
     READ_PRODUCT_ERROR,
     READ_COMMENT_ERROR,
-) = range(9)
+    DB_READ_ERROR,
+    DB_WRITE_ERROR,
+    JSON_ERROR,
+    CSV_WRITE_ERROR,
+
+) = range(13)
 
 #mode
 (
+    NA_MODE,
     ALL,
     PRODUCT_ITEMS,
     PRODUCT_COMMENTS,
-) = range(3)
+) = range(4)
+
+(
+    NA_SOURCE,
+    SHOPEE,
+    PTT,
+    AMAZON
+) = range(4)
+
+MODES = {
+    ALL: "product_goods:product_comments",
+    PRODUCT_ITEMS: "product_goods",
+    PRODUCT_COMMENTS: "product_comments"
+}
+
+DATA_SOURCES ={
+    SHOPEE: "shopee",
+    PTT: "ptt",
+    AMAZON: "amazon"
+}
 
 ERRORS = {
     DIR_ERROR: "Config directory error",
@@ -41,4 +66,8 @@ ERRORS = {
     READ_INDEX_ERROR: "read the index error",
     READ_PRODUCT_ERROR: "read the product detail error",
     READ_COMMENT_ERROR: "read the comment error",
+    DB_READ_ERROR: "database read error",
+    DB_WRITE_ERROR: "database write error",
+    JSON_ERROR: "json error",
+    CSV_WRITE_ERROR: "csv write error",
 }

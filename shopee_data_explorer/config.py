@@ -54,7 +54,9 @@ def _create_shopee_data(kwargs: dict) -> int:
                                 "ip_addresses": kwargs['ip_addresses'],
                                 "proxy_auth": kwargs['proxy_auth'],
                                 #"my_header": str(kwargs['my_header']),
-                                "webdriver_path": kwargs['webdriver_path']}
+                                "webdriver_path": kwargs['webdriver_path'],
+                                "data_source": kwargs['data_source'],
+                                "db_path": kwargs['db_path'],}
 
     config_parser.add_section('Network-Header')
     for key in kwargs['my_header'].keys():

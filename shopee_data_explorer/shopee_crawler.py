@@ -440,6 +440,7 @@ class CrawlerHandler:
 
 
 #todo: move the following jobs to config.py or data_builder.py
+#todo: should use dynamic to represent data_source, not 'shopee'
 DEFAULT_DATA_PATH = Path.home().joinpath(
     "Shopee_Data"
 )
@@ -460,7 +461,9 @@ def get_configs_data(config_file: Path) -> Path:
         ast.literal_eval(config_parser["General"]["ip_addresses"]),\
             config_parser["General"]["proxy_auth"],\
                  config_parser["General"]["webdriver_path"],\
-                     dict(config_parser['Network-Header'].items())
+                     config_parser["General"]["data_source"],\
+                         config_parser["General"]["db_path"],\
+                            dict(config_parser['Network-Header'].items())
 
 
 def init_data(data_path: Path) -> int:

@@ -15,9 +15,10 @@ from typing import Any, Dict, List, NamedTuple
 import logging
 import pandas as pd
 from tqdm import tqdm
-from shopee_data_explorer import READ_INDEX_ERROR, READ_PRODUCT_ERROR,READ_COMMENT_ERROR
-from shopee_data_explorer import shopee_crawler
+from shopee_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
+    READ_COMMENT_ERROR
 import shopee_data_explorer
+from shopee_data_explorer.database import DatabaseHandler
 from shopee_data_explorer.shopee_crawler import CrawlerHandler
 from shopee_data_explorer.data_process import CrawlerDataProcesser
 
@@ -48,18 +49,25 @@ class ScrapingInfoForList(NamedTuple):
     scraping_info: List[Dict[str, Any]]
     error: int
 
+class ScrapingInfoForDF(NamedTuple):
+    """ data model for index"""
+    scraping_info: pd.DataFrame
+    error: int
+
 
 class Explorer:
     """ test """
-    def __init__(self,data_path:Path,ip_addresses: List[str], proxy_auth: str, \
-    header: Dict[str, any], webdriver_path:str, data_source:str='shopee') -> None:
+    def __init__(self,data_path:Path,db_path:Path,ip_addresses: List[str], proxy_auth: str,\
+        header: Dict[str, any], webdriver_path:str, data_source:int) -> None:
         # debug
         print("1. header type: " + str(type(header)))
         print("1. header items: " + str(header.items))
         self._crawler_handler = CrawlerHandler(ip_addresses,proxy_auth,header,webdriver_path)
         self._data_processor = CrawlerDataProcesser(data_source)
+        self._db_handler = DatabaseHandler(data_path,db_path)
         self.a_page_product_index = []
         self.data_path = data_path
+        self.data_source = data_source
 
     def read_index_selenium(self, keyword: str,page_num: int) -> ScrapingInfo:
         """read the index"""
@@ -176,7 +184,8 @@ class Explorer:
         return ScrapingInfoForList(read.result, read.error)
 
 
-    def scrap(self, keyword: str, num_of_product: int, mode:int, page_length) -> ScrapingInfo:
+    def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
+        ) -> ScrapingInfo:
         """tests"""
         # page length is 50 here by default so suppose user should input multiplier of 50
         # otherwise use floor division - // rounds any number down to the nearest integer.
@@ -231,13 +240,32 @@ class Explorer:
                 product_items_container = self._data_processor.aggregate_product_data\
                     (product_items_container,product_items)
                 self._data_processor.clean_product_data()
-                self._data_processor.write_shopee_goods_data(product_items_container, keyword)
+                crawler_mode = MODES[mode]
+                if mode == shopee_data_explorer.ALL:
+                    crawler_mode = crawler_mode.split(':')[0]
+
+                read = self._db_handler.write_csv(product_items_container, keyword,\
+                    self.data_source,crawler_mode)
+
+                if read.error == CSV_WRITE_ERROR:
+                    return ScrapingInfo(read.response.to_dict(), read.error)
+                #self._data_processor.write_shopee_goods_data(product_items_container, keyword)
             #debug
             #print("after:scrapall->conatiner:head", product_items_container.head(5))
             #print("after:scrapall->conatiner:tail", product_items_container.tail(5))
             if mode == shopee_data_explorer.ALL or mode == shopee_data_explorer.\
                     PRODUCT_COMMENTS:
-                self._data_processor.write_shopee_comments_data(product_comments_container, keyword)
+
+                crawler_mode = MODES[mode]
+                if mode == shopee_data_explorer.ALL:
+                    crawler_mode = crawler_mode.split(':')[1]
+
+                read = self._db_handler.write_csv(product_comments_container, keyword,\
+                    self.data_source,crawler_mode)
+                if read.error == CSV_WRITE_ERROR:
+                    return ScrapingInfo(read.response.to_dict(), read.error)
+                #self._data_processor.write_shopee_comments_data(product_comments_container,\
+                #  keyword)
 
         if mode == shopee_data_explorer.ALL:
             if not product_items_container.empty and not product_comments_container.empty:
