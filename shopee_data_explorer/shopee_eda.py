@@ -35,8 +35,9 @@ class ShopeeEDA():
     """ test """
     ####### contant and Instance Variables ########
 
-    def __init__(self,data_path:Path,charts:List[str], product_data:pd.DataFrame,\
-        comments_data:pd.DataFrame,myfont:FontProperties,chart_color=None)->None:
+    def __init__(self,keyword:str ,data_source: str, data_path:Path,charts:List[str],\
+         product_data:pd.DataFrame,comments_data:pd.DataFrame,myfont:FontProperties,\
+             chart_color=None)->None:
         """thid class is doing EDA"""
 
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
@@ -56,6 +57,8 @@ class ShopeeEDA():
         self.consumer_power = pd.DataFrame()
         self.charts = charts
         self.data_path = data_path
+        self.keyword = keyword
+        self.data_source = data_source
 
     def rotate_color(self) -> str:
         """ test """
@@ -147,11 +150,11 @@ class ShopeeEDA():
                     #return FIGURE_ERROR
         return EDAResponse(errors,SUCCESS)
 
-
     def prepare_figures_header(self):
         """ test """
-        html = '<h1 style="font-size:60px; text-align:center;">Shopee EDA charts</h1>\n \
-        <hr style="border-top: 8px solid #bbb; border-radius: 5px;">\n'
+        html = f'<h1 style="font-size:60px; text-align:center;">{self.data_source} EDA charts for \
+             {self.keyword}</h1>\n \
+                <hr style="border-top: 8px solid #bbb; border-radius: 5px;">\n'
         with open('test.html','w',encoding="utf-8") as htm_file:
             htm_file.write(html)
 

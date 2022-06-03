@@ -28,8 +28,9 @@ __version__ = "1.1.0"
     JSON_ERROR,
     CSV_WRITE_ERROR,
     FIGURE_ERROR,
+    EDA_ERROR,
 
-) = range(14)
+) = range(15)
 
 #mode
 (
@@ -71,5 +72,6 @@ ERRORS = {
     DB_WRITE_ERROR: "database write error",
     JSON_ERROR: "json error",
     CSV_WRITE_ERROR: "csv write error",
-    FIGURE_ERROR: "made figure but failed"
+    FIGURE_ERROR: "made figure but failed",
+    EDA_ERROR: "during EDA, something goes wrong"
 }

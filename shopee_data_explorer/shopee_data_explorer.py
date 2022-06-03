@@ -20,7 +20,7 @@ import pandas as pd
 from matplotlib.font_manager import FontProperties
 from tqdm import tqdm
 from shopee_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
-    READ_COMMENT_ERROR
+    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR
 import shopee_data_explorer
 from shopee_data_explorer import shopee_eda
 from shopee_data_explorer.database import DatabaseHandler
@@ -74,6 +74,7 @@ class Explorer:
         self.a_page_product_index = []
         self.data_path = data_path
         self.data_source = data_source
+
 
     def read_index_selenium(self, keyword: str,page_num: int) -> ScrapingInfo:
         """read the index"""
@@ -189,6 +190,15 @@ class Explorer:
         #print(Explorer.read_good_comments.__name__, "-read.result: ", str(read.result))
         return ScrapingInfoForList(read.result, read.error)
 
+    def _extract_keyword(self,product_csv_name:str) -> str:
+        """ extract keyword from the csv name"""
+        return product_csv_name.split('_')[1]
+
+    def _extract_source(self,product_csv_name:str) -> str:
+        """ extract data source from the csv name"""
+        return product_csv_name.split('_')[0]
+
+
     def _detect_path_format_for_os(self) -> Tuple[str,str]:
         """ find out the right path format for user os"""
         the_os = list(platform.uname())[0]
@@ -221,13 +231,17 @@ class Explorer:
                 engine= 'python')
             chart_groups = ['make_figure1', 'make_figure2', 'make_figure3','make_figure4',\
             'make_figure5', 'make_figure6']
-            shopee_eda_instance = ShopeeEDA(self.data_path,chart_groups,products_data,\
-                comments_data,my_font)
+            keyword = self._extract_keyword(product_csv_name)
+            data_source = self._extract_source(product_csv_name)
+            shopee_eda_instance = ShopeeEDA(keyword,data_source,self.data_path,chart_groups,\
+                products_data,comments_data,my_font)
             read = shopee_eda_instance.do_eda()
-            return read
+            #todo: define the data format of response here
+            return (read.result,SUCCESS)
         else:
             print(f"{product_csv_name} or {product_comment_name} is not found in {self.data_path}")
-            raise sys.exit(1)
+            #raise sys.exit(1)
+            return (read.result,EDA_ERROR)
 
 
     def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
@@ -238,7 +252,7 @@ class Explorer:
         # so if 256 is given, the page should be 5 that will miss extra 6 items
 
         #page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
-
+        #self.keyword = keyword
         page_num = num_of_product // page_length
         scraper_init = {
             "keyword":keyword,

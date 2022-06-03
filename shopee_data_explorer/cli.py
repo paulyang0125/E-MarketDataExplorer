@@ -212,8 +212,19 @@ def eda(
     comment_csv_name = required_args[1]
     explorer = get_explorer()
     response, error = explorer.do_eda(products_csv_name,comment_csv_name)
-
-
+    if error:
+        typer.secho(
+            f'failed with "{ERRORS[error]}"'\
+                f"""errors are {response}"""
+                , fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    else:
+        typer.secho(
+            f"""eda for {products_csv_name} and {comment_csv_name} completes sucesssfully"""
+            f"""go to data folder to see the results""",
+            fg=typer.colors.GREEN,
+        )
 
 
 @app.command()
