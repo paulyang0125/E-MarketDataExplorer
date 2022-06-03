@@ -11,10 +11,7 @@
 from typing import Dict, List
 from pathlib import Path
 from typing import Optional
-import typing
-
 import typer
-
 from shopee_data_explorer import (
     ERRORS, __app_name__, __version__, database, config, shopee_crawler, shopee_data_explorer
 )
@@ -193,6 +190,30 @@ def read_search(
                     f"""finally it obtains the number of search result: {response['obtained_index_num']} """,
                     fg=typer.colors.GREEN,
                 )
+
+
+
+@app.command()
+#input arg -> file1: csv, file2: csv
+
+def eda(
+    required_args :List[str] = typer.Argument(...),
+
+) -> None:
+    """EDA source data from csv files"""
+    # debug
+    print(f'inputs are args - {required_args}')
+    if len(required_args) != 2:
+        typer.secho(
+        f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
+    )
+        raise typer.Exit(1)
+    products_csv_name = required_args[0]
+    comment_csv_name = required_args[1]
+    explorer = get_explorer()
+    response, error = explorer.do_eda(products_csv_name,comment_csv_name)
+
+
 
 
 @app.command()

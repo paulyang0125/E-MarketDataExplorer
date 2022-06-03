@@ -10,17 +10,23 @@
 # shopee_data_explorer/shopee_data_explorer.py
 # rptodo/rptodo.py
 #from pathlib import Path
+import sys
+import os
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 import logging
+import platform
 import pandas as pd
+from matplotlib.font_manager import FontProperties
 from tqdm import tqdm
 from shopee_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
     READ_COMMENT_ERROR
 import shopee_data_explorer
+from shopee_data_explorer import shopee_eda
 from shopee_data_explorer.database import DatabaseHandler
 from shopee_data_explorer.shopee_crawler import CrawlerHandler
 from shopee_data_explorer.data_process import CrawlerDataProcesser
+from shopee_data_explorer.shopee_eda import ShopeeEDA
 
 
 mylogger = logging.getLogger(__name__)
@@ -183,6 +189,46 @@ class Explorer:
         #print(Explorer.read_good_comments.__name__, "-read.result: ", str(read.result))
         return ScrapingInfoForList(read.result, read.error)
 
+    def _detect_path_format_for_os(self) -> Tuple[str,str]:
+        """ find out the right path format for user os"""
+        the_os = list(platform.uname())[0]
+        if the_os == 'Windows':
+            the_os = '\\'
+            os_encode = 'utf-8-sig'
+        elif the_os == 'Darwin':
+            the_os = '/'
+            os_encode = 'utf-8-sig'
+        else:
+            the_os = '/'
+            os_encode = 'utf-8'
+
+        return (the_os,os_encode)
+
+
+    def do_eda(self, product_csv_name:str, product_comment_name:str)-> shopee_eda.EDAResponse:
+        """test"""
+        the_os, os_encode = self._detect_path_format_for_os()
+        my_font = FontProperties(fname='tools'+ the_os + 'msj.ttf')
+        product_csv_name_path = self.data_path.joinpath(product_csv_name)
+        product_comment_name_path = self.data_path.joinpath(product_comment_name)
+        #os.chdir(self.data_path)
+
+        #if os.path.exists(product_csv_name) and os.path.exists(product_comment_name):
+        if product_csv_name_path.exists() and product_comment_name_path.exists():
+            products_data = pd.read_csv(product_csv_name_path,encoding = os_encode, \
+                engine= 'python')
+            comments_data = pd.read_csv(product_comment_name_path,encoding = os_encode, \
+                engine= 'python')
+            chart_groups = ['make_figure1', 'make_figure2', 'make_figure3','make_figure4',\
+            'make_figure5', 'make_figure6']
+            shopee_eda_instance = ShopeeEDA(self.data_path,chart_groups,products_data,\
+                comments_data,my_font)
+            read = shopee_eda_instance.do_eda()
+            return read
+        else:
+            print(f"{product_csv_name} or {product_comment_name} is not found in {self.data_path}")
+            raise sys.exit(1)
+
 
     def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
         ) -> ScrapingInfo:
@@ -210,10 +256,12 @@ class Explorer:
             product_items = self._data_processor.process_raw_search_index(read.result)
 
 
-            for item_id, shop_id, name in tqdm(zip(product_items['itemid'].tolist(),\
-                product_items['shopid'].tolist(),product_items['name'].tolist()),\
+            for index, (item_id, shop_id, name) in tqdm(enumerate(zip(product_items['itemid']\
+                .tolist(),\
+                product_items['shopid'].tolist(),product_items['name'].tolist())),\
                 total=len(product_items['itemid'].tolist())):
-                mylogger.info('scaraping %s ...', name[:30])
+
+                mylogger.info('# %i,scaraping %s ...', index, name[:30])
 
                 if mode == shopee_data_explorer.ALL or mode == shopee_data_explorer.\
                     PRODUCT_ITEMS:
@@ -309,6 +357,9 @@ class Explorer:
             else:
                 print("containers are empty")
                 return ScrapingInfo(scraper_init, read.error)
+
+
+
 
 
 

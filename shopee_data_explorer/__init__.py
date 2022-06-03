@@ -27,8 +27,9 @@ __version__ = "1.1.0"
     DB_WRITE_ERROR,
     JSON_ERROR,
     CSV_WRITE_ERROR,
+    FIGURE_ERROR,
 
-) = range(13)
+) = range(14)
 
 #mode
 (
@@ -70,4 +71,5 @@ ERRORS = {
     DB_WRITE_ERROR: "database write error",
     JSON_ERROR: "json error",
     CSV_WRITE_ERROR: "csv write error",
+    FIGURE_ERROR: "made figure but failed"
 }
