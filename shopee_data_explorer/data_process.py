@@ -10,10 +10,22 @@
 # shopee_data_explorer/data_process.py
 
 
-
+import logging
 from typing import Any, Dict, List
 import pandas as pd
 
+
+
+mylogger = logging.getLogger(__name__)
+fh = logging.FileHandler(f'{__name__}.log')
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+# add the handlers to logger
+mylogger.addHandler(ch)
+mylogger.addHandler(fh)
 
 
 
@@ -66,7 +78,7 @@ class CrawlerDataProcesser:
                 if pd.DataFrame(item).filter(regex = 'model_name').shape[1] != 0:
                     models.append(pd.DataFrame(item)['model_name'].tolist())
                 else:
-                    print('No model_name')
+                    mylogger.warning('No model_name')
                     models.append(None)
 
             user_comment['product_items']= models # puts models aka SKUs in
@@ -107,6 +119,3 @@ class CrawlerDataProcesser:
             product_items[count] = result[count]['item_basic']
         product_items=pd.DataFrame(product_items).T
         return product_items
-
-        #product_items_container = pd.concat([product_items_container,product_items],axis=0)
-

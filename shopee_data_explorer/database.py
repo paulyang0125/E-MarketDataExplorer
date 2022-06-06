@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, NamedTuple
 import pandas as pd
 
-from shopee_data_explorer import(DATA_SOURCES, MODES,\
+from shopee_data_explorer import(DATA_SOURCES,\
     DB_READ_ERROR, DB_WRITE_ERROR, CSV_WRITE_ERROR, JSON_ERROR, SUCCESS)
 
 # todo: use data_source to dynamically update, not "shopee"
@@ -73,12 +73,12 @@ class DatabaseHandler:
         res_list = []
         res = {}
         try:
-            with self._db_path.open("w") as db:
+            with self._db_path.open("w") as db_instannce:
                 res['itemid'] = product_items['itemid'].tolist()
                 res['shopid'] = product_items['shopid'].tolist()
                 res['name'] = product_items['name'].tolist()
                 res_list.append(res)
-                json.dump(res_list, db, indent=4)
+                json.dump(res_list, db_instannce, indent=4)
                 return DBResponseForIndex(res_list, SUCCESS)
         except OSError:  # Catch file IO problems
             return DBResponseForIndex(res_list, DB_WRITE_ERROR)

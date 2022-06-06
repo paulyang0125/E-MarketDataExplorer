@@ -10,8 +10,7 @@
 # shopee_data_explorer/shopee_data_explorer.py
 # rptodo/rptodo.py
 #from pathlib import Path
-import sys
-import os
+
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Tuple
 import logging
@@ -30,15 +29,11 @@ from shopee_data_explorer.shopee_eda import ShopeeEDA
 
 
 mylogger = logging.getLogger(__name__)
-mylogger.setLevel(logging.DEBUG)
 fh = logging.FileHandler(f'{__name__}.log')
-fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
 fh.setFormatter(formatter)
 # add the handlers to logger
 mylogger.addHandler(ch)
@@ -176,12 +171,11 @@ class Explorer:
 
     def read_good_comments(self,shop_id: int, item_id: int) -> ScrapingInfoForList:
         """test"""
-        '''
-        scraper_init = {
-            "shop_id":shop_id,
-            "item_id": item_id,
-        }
-        '''
+
+        #scraper_init = {
+        #    "shop_id":shop_id,
+        #    "item_id": item_id,
+        #}
         read = self._crawler_handler.read_good_comments(shop_id, item_id)
         if read.error == READ_COMMENT_ERROR:
             #return ScrapingInfoForList(scraper_init, read.error)
@@ -263,7 +257,7 @@ class Explorer:
         product_items_container = pd.DataFrame()
         product_comments_container = pd.DataFrame()
 
-        for page in tqdm(range(page_num)):
+        for page in tqdm(range(page_num), position=0, leave=True):
             read = self._crawler_handler.read_search_indexs(keyword,page,page_length)
             if read.error == READ_INDEX_ERROR:
                 return ScrapingInfo(scraper_init, read.error)
@@ -273,7 +267,7 @@ class Explorer:
             for index, (item_id, shop_id, name) in tqdm(enumerate(zip(product_items['itemid']\
                 .tolist(),\
                 product_items['shopid'].tolist(),product_items['name'].tolist())),\
-                total=len(product_items['itemid'].tolist())):
+                total=len(product_items['itemid'].tolist()), position=0, leave=True):
 
                 mylogger.info('# %i,scaraping %s ...', index, name[:30])
 
@@ -371,12 +365,3 @@ class Explorer:
             else:
                 print("containers are empty")
                 return ScrapingInfo(scraper_init, read.error)
-
-
-
-
-
-
-
-
-

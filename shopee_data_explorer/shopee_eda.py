@@ -94,7 +94,7 @@ class ShopeeEDA():
         return ast.literal_eval(the_str)
 
     def process_rating(self) -> None:
-        """把欄位的內容放入evaluation方法進行轉換"""
+        """input the content to evaluation for coversion"""
         self.contents['item_rating'] = self.contents['item_rating'].apply(self.evaluation)
         self.contents['rating_star'] = self.contents['item_rating']\
             .apply(lambda x:x['rating_star'])
@@ -104,7 +104,7 @@ class ShopeeEDA():
 
     def create_preprocessed_dataframes(self):
         """ test """
-        # put sku（商品規格）into content
+        # put sku into content
         comment_sku = self.comments.drop_duplicates('itemid')
         self.contents = self.contents.merge(comment_sku[['itemid', 'product_items']], \
         how = 'left', on='itemid')
@@ -315,6 +315,11 @@ class ShopeeEDA():
                 tags.append(tag)
                 likes.append(like)
                 sales.append(sale)
+            elif sale > self.tag_data['sales'].mean()+self.tag_data['sales'].std()*1:
+                tags.append(tag)
+                likes.append(like)
+                sales.append(sale)
+
 
         texts = []
         for x_pos, y_pos, text in zip(likes[:], sales[:], tags[:]):
@@ -350,33 +355,3 @@ class ShopeeEDA():
         os.chdir(owd)
         read = self.make_figures(self.charts)
         return read
-
-"""     def get_text_positions(self,text, x_data, y_data, txt_width, txt_height):
-
-        x_y = zip(y_data, x_data)
-        text_positions = list(y_data)
-        for index, (y, x) in enumerate(x_y):
-            local_text_positions = [i for i in x_y if i[0] > (y - txt_height)
-                                and (abs(i[1] - x) < txt_width * 2) and i != (y,x)]
-            if local_text_positions:
-                sorted_ltp = sorted(local_text_positions)
-                if abs(sorted_ltp[0][0] - y) < txt_height: #True == collision
-                    differ = np.diff(sorted_ltp, axis=0)
-                    x_y[index] = (sorted_ltp[-1][0] + txt_height, x_y[index][1])
-                    text_positions[index] = sorted_ltp[-1][0] + txt_height*1.01
-                    for k, (j, m) in enumerate(differ):
-                        #j is the vertical distance between words
-                        if j > txt_height * 2: #if True then room to fit a word in
-                            x_y[index] = (sorted_ltp[k][0] + txt_height, x_y[index][1])
-                            text_positions[index] = sorted_ltp[k][0] + txt_height
-                            break
-        return text_positions
-
-    def text_plotter(self,text, x_data, y_data, text_positions, txt_width,txt_height):
-
-        for z,x,y,t in zip(text, x_data, y_data, text_positions):
-            plt.annotate(str(z), xy=(x-txt_width/2, t), size=12)
-            if y != t:
-                plt.arrow(x, t,0,y-t, color='red',alpha=0.3, width=txt_width*0.1,
-                    head_width=txt_width, head_length=txt_height*0.5,
-                    zorder=0,length_includes_head=True) """

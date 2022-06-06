@@ -8,8 +8,10 @@
 
 """This module provides the Shopee Data Explorer CLI."""
 # shopee_data_explorer/cli.py
-from typing import Dict, List
+import logging
+import sys
 from pathlib import Path
+from typing import Dict, List
 from typing import Optional
 import typer
 from shopee_data_explorer import (
@@ -76,7 +78,7 @@ def init(
     else:
         typer.secho(f"The shopee explorer config is {config_file_path}", fg=typer.colors.GREEN)
 
-    #todo: move init_data job to config.py or data_builder.py
+    #todo: will move init_data job to config.py or data_builder.py in v1.3+
     data_init_error = shopee_crawler.init_data(Path(data_path))
 
     if data_init_error:
@@ -97,23 +99,13 @@ def get_explorer() -> shopee_data_explorer.Explorer:
         data_path,ip_addresses,proxy_auth,webdriver_path,data_source,db_path,my_header = \
             shopee_crawler.get_configs_data(config.CONFIG_FILE_PATH)
 
-    #debug
-        '''
-        print(type(data_path))
-        print(type(ip_addresses))
-        print(type(proxy_auth))
-        print(type(webdriver_path))
-        print(type(my_header))
-        print(my_header['user-agent'])
-        '''
-
     else:
         typer.secho(
             'Config file not found. Please, run "shopee_data_explorer init"',
             fg=typer.colors.RED,
         )
         raise typer.Exit(1)
-    print("data_source: ", data_source)
+
     if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
         and webdriver_path and isinstance(my_header,Dict) and data_source:
         return shopee_data_explorer.Explorer(data_path,db_path,ip_addresses,proxy_auth,my_header,\
@@ -137,11 +129,12 @@ def _version_callback(value: bool) -> None:
 def read_search(
     required_args :List[str] = typer.Argument(...),
     searcher_type: int = typer.Option(1, "--searcher_type", "-t", min=1, max=2),
-    retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
+    # todo: will implement retry by adding the abstract class to decople the retry mecanism
+    #retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
 ) -> None:
     """for test/debug, read search data"""
 
-    print(f'inputs are {required_args}, {searcher_type}, {retry}')
+    #print(f'inputs are {required_args}, {searcher_type}, {retry}')
     if searcher_type == 1:
         if len(required_args) != 3:
             typer.secho(
@@ -162,8 +155,10 @@ def read_search(
             else:
                 typer.secho(
                     f"""explorer: "{response['keyword']}" was searched """
-                    f"""with options: page_num {response['page_num']} and page_length {response['page_length']} """
-                    f"""finally it obtains the number of search result: {response['obtained_index_num']} """,
+                    f"""with options: page_num {response['page_num']} and page_length \
+                        {response['page_length']} """
+                    f"""finally it obtains the number of search result: \
+                        {response['obtained_index_num']} """,
                     fg=typer.colors.GREEN,
                 )
 
@@ -187,7 +182,8 @@ def read_search(
                 typer.secho(
                     f"""explorer: "{response['keyword']}" was searched """
                     f"""with options: page_num {response['page_num']} """
-                    f"""finally it obtains the number of search result: {response['obtained_index_num']} """,
+                    f"""finally it obtains the number of search result: \
+                        {response['obtained_index_num']} """,
                     fg=typer.colors.GREEN,
                 )
 
@@ -202,7 +198,7 @@ def eda(
 ) -> None:
     """EDA source data from csv files"""
     # debug
-    print(f'inputs are args - {required_args}')
+    #print(f'inputs are args - {required_args}')
     if len(required_args) != 2:
         typer.secho(
         f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
@@ -236,11 +232,31 @@ def scrap(
     mode: int = typer.Option(1, "--scrap_mode_for_shopee", "-sm", min=1, max=3),
     searcher_type: int = typer.Option(1, "--searcher_type", "-st", min=1, max=2),
     retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
+    verbose_level: int = typer.Option(3, "--verbose", "-ve", min=1, max=3)
 ) -> None:
     """scrap source data"""
+    if verbose_level == 1:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+
+    elif verbose_level == 2:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+
+    elif verbose_level == 3:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.FATAL)
+
+
+    mylogger = logging.getLogger(__name__)
+
+
     # debug
-    print(f'inputs are args - {required_args}, mode - {mode}, seacher-typr - \
-        {searcher_type}, retry - {retry}')
+    #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, seacher-typr - \
+    #    {searcher_type}, retry - {retry}')
+
+    mylogger.debug('inputs are args - %s, mode - %i, seacher-type - \
+        %i, retry - %i, verbose - %i', required_args, mode, searcher_type, retry, verbose_level)
 
     if searcher_type == 1:
         if len(required_args) < 2:
@@ -258,14 +274,11 @@ def scrap(
                 page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
                 typer.secho(f'page_length is not given, the app will use default\
                      length:{shopee_crawler.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
-            '''
-            if not required_args[2]:
-                page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
-                typer.secho(f'page_length is not given, the app will use default\
-                     length:{shopee_crawler.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
-            else:
-                page_length = int(required_args[2])
-            '''
+
+            typer.secho(
+                    f"""scrap for {keyword} is starting!""",
+                    fg=typer.colors.GREEN,
+                )
 
             explorer = get_explorer()
             response, error = explorer.scrap(keyword,num_of_product,mode,page_length)
@@ -278,16 +291,15 @@ def scrap(
                 typer.secho(
                     f"""explorer: "{response['keyword']}" was searched and collected sucesssfully"""
                     f"""with options: page_num {response['page_num']} and page_length \
-                         {response['page_length']} """,
+                    {response['page_length']} """,
                     fg=typer.colors.GREEN,
                 )
     else:
-        print("sorry, it's not supportive yet")
+        typer.secho(
+            "sorry, it's not supported yet. please wait for the next version",
+             fg=typer.colors.RED,
+        )
         raise typer.Exit(1)
-
-
-
-
 
 
 @app.callback()
@@ -302,4 +314,5 @@ def main(
     )
 ) -> None:
     """ show app version"""
+    typer.secho(f"""{version}""",fg=typer.colors.GREEN)
     return

@@ -27,15 +27,15 @@ from shopee_data_explorer import (READ_INDEX_ERROR, \
 
 
 ############# LOGGIING #############
-logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
+#logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
 
 logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
-logger.setLevel(logging.WARNING)  # or any variant from ERROR, CRITICAL or NOTSET
-fh = logging.FileHandler('spam.log')
-fh.setLevel(logging.DEBUG)
+#logger.setLevel(logging.WARNING)  # or any variant from ERROR, CRITICAL or NOTSET
+fh = logging.FileHandler('selenium_debug.log')
+#fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+#ch.setLevel(logging.DEBUG)
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
@@ -46,15 +46,17 @@ logger.addHandler(fh)
 
 
 mylogger = logging.getLogger(__name__)
-mylogger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('another_spam.log')
-fh.setLevel(logging.DEBUG)
+#mylogger.setLevel(logging.DEBUG)
+#fh = logging.FileHandler('e-market.log')
+fh = logging.FileHandler(f'{__name__}.log')
+#fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+#ch.setLevel(logging.DEBUG)
 # create formatter and add it to the handlers
+#formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+#ch.setFormatter(formatter)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
 fh.setFormatter(formatter)
 # add the handlers to logger
 mylogger.addHandler(ch)
@@ -124,7 +126,7 @@ class CrawlerHandler:
 
     def __del__(self):
         class_name = self.__class__.__name__
-        print(str(class_name) + " is destroyed.")
+        mylogger.debug("%s is destroyed.", str(class_name))
 
 ############# HELPER #############
 
@@ -132,8 +134,10 @@ class CrawlerHandler:
         """test"""
         proxy_index = random.randint(0, len(self.ip_addresses) - 1)
         return {
-        "https": "https://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index]),
-        "http": "http://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index])}
+        #"https": "https://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index]),
+        "https": f"https://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/",
+        #"http": "http://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index])}
+        "http": f"http://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/"}
 
     def _create_proxy_seleniumwire(self) -> Dict[str,Dict[str,str]]:
         options = {
@@ -153,21 +157,23 @@ class CrawlerHandler:
     def _rotate_ip(self)-> None:
         """test"""
         proxy_index = random.randint(0, len(self.ip_addresses) - 1)
-        print("New rotated index: " + str(proxy_index))
+        mylogger.debug("The new rotated index: %s", str(proxy_index))
         self.instance_proxies = {
-        "https": "https://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index]),
-        "http": "http://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index])}
+        #"https": "https://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index]),
+        "https": f"https://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/",
+        #"http": "http://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index])}
+        "http": f"http://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/"}
 
     def _locate_myip(self) -> None:
         """test"""
         my_ip = requests.get('https://api.ipify.org').text
-        print(f'My public IP address is: {my_ip}')
+        mylogger.debug("My public IP address is %s", my_ip)
 
 ############# READER #############
 
     def _read_search_results(self,url:str,time_out:int=2) -> str:
         """ test """
-        print(self._read_search_results.__name__, " start.")
+        mylogger.debug("%s starts.", self._read_search_results.__name__)
         driver = webdriver.Chrome(self.path,options=self.chrome_options,\
             seleniumwire_options=self.seleniumwire_options)
         driver.get(url)
@@ -182,7 +188,7 @@ class CrawlerHandler:
 
     def _read_id(self,url:str,time_out:int) -> str:
         """ test """
-        print(self._read_id.__name__, " start.")
+        mylogger.debug("%s starts.",self._read_id.__name__)
         driver = webdriver.Chrome(self.path,options=self.chrome_options,\
             seleniumwire_options=self.seleniumwire_options)
         #driver = webdriver.Chrome(path,seleniumwire_options=options)
@@ -194,7 +200,7 @@ class CrawlerHandler:
 
     def _parse_search_result(self,html:str) -> List[str]:
         """ test """
-        print(self._parse_search_result.__name__, " start.")
+        mylogger.debug("%s starts.",self._parse_search_result.__name__)
         soup = BeautifulSoup(html,features="html.parser")
         search_product_urls = [i.get('href') for i in soup.find_all('a',\
             attrs={"data-sqe" : "link"}) if i]
@@ -202,29 +208,30 @@ class CrawlerHandler:
 
     def _parse_itemid(self,html:str) -> Tuple[str,str]:
         """ test """
-        print(self._parse_itemid.__name__, " start.")
+        mylogger.debug("%s starts.",self._parse_itemid.__name__)
         if 'itemId' in html:
             soup = BeautifulSoup(html,features="html.parser")
             for link in soup.find_all('a'):
                 if link.get('href') and 'itemId=' in link.get('href'):
                     mylogger.debug("-- %s",str(link.get('href')))
-                    print("-- %s",str(link.get('href')))
+                    #print("-- %s",str(link.get('href')))
                     return (link.get('href'), link.get('href').partition('itemId=')[2])
         else:
             mylogger.warning("can't find itemId")#print(soup.prettify())
-            print("can't find itemId")#print(soup.prettify())
+            #print("can't find itemId")#print(soup.prettify())
             return ("","")
 
     # todo: very urly codes too many if-else and for-loop, need to refactor
     def _parse_shopid(self, html: str):
         """ test """
-        print(self._parse_shopid.__name__, " start.")
+        mylogger.debug("%s starts.",self._parse_shopid.__name__)
         if 'shopid' in html:
             if 'shopid=' in html:
                 mylogger.debug("shopid=" ": yes")
-                print("shopid=" ": yes")
-                mylogger.debug(str(html[html.find("shopid="):html.find("shopid=")+30]))
-                print(str(html[html.find("shopid="):html.find("shopid=")+30]))
+                #print("shopid=" ": yes")
+                mylogger.debug("the content %s",str(html[html.find("shopid="):html.\
+                    find("shopid=")+30]))
+                #print(str(html[html.find("shopid="):html.find("shopid=")+30]))
                 return html[html.find("shopid="):html.find("shopid=")+30].partition("&")\
                     [0].partition("=")[2]
             else:
@@ -233,7 +240,7 @@ class CrawlerHandler:
                     if link.get('href'):
                         if 'shopid=' in link.get('href'):
                             mylogger.debug("-- %s",str(link.get('href')))
-                            print("-- %s",str(link.get('href')))
+                            #print("-- %s",str(link.get('href')))
                             shopid = [i.partition('=')[2] for i in link.get('href')\
                                 .split('&') if "shopid=" in i]
                             if shopid:
@@ -242,12 +249,12 @@ class CrawlerHandler:
                             return
         else:
             mylogger.warning("can't find shopid")#print(soup.prettify())
-            print("can't find shopid")
+            #print("can't find shopid")
             return
 
     def read_a_page_selenium_search_indexs(self,keyword: int, page: int) -> CrawlerResponse:
         """test"""
-        print(self.read_a_page_selenium_search_indexs.__name__, " start.")
+        mylogger.debug("%s starts.",self.read_a_page_selenium_search_indexs.__name__)
         timeout_1 = 2
         timeout_2 = 3
         timeout_3 = 5
@@ -293,7 +300,7 @@ class CrawlerHandler:
             + keyword + '&limit=' + str(page_length) + '&newest=' + str(page*page_length) + \
                 '&order=desc&page_type=search&scenario=PAGE_GLOBAL_SEARCH&version=2'
 
-        mylogger.info("reading the index for %s", str(keyword))
+        mylogger.info("reading the search index for %s", str(keyword))
         mylogger.debug("URL is %s", url)
 
 
@@ -318,8 +325,8 @@ class CrawlerHandler:
                 self._rotate_ip()
                 retries = retries - 1
             else:
-                mylogger.info('reading the index for %s is completed', keyword)
-                mylogger.debug('reading the index for %s took about %s', keyword, \
+                mylogger.info('reading the search index for %s is completed', keyword)
+                mylogger.debug('reading the search index for %s took about %s', keyword, \
                     str(search_results.elapsed.total_seconds()))
                 break
         if search_results:
@@ -343,7 +350,8 @@ class CrawlerHandler:
 
         url = 'https://shopee.tw/api/v2/item/get?itemid=' + str(item_id) + '&shopid=' + \
             str(shop_id)
-        mylogger.info('collect good info for shopid %s and itemid %s', str(item_id), str(shop_id))
+        mylogger.info('collecting good info for shopid %s and itemid %s', str(item_id), \
+            str(shop_id))
         retries = 3
         goods_details_results = None
         time_out = 10
@@ -392,7 +400,7 @@ class CrawlerHandler:
 
         url = 'https://shopee.tw/api/v1/comment_list/?item_id='+ str(item_id) + '&shop_id=' + \
         str(shop_id) + '&offset=0&limit=200&flag=1&filter=0'
-        mylogger.info('collect good comment for shopid %s and itemid %s', str(item_id), \
+        mylogger.info('collecting good comment for shopid %s and itemid %s', str(item_id), \
             str(shop_id))
 
         retries = 3
