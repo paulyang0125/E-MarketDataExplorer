@@ -6,7 +6,15 @@
 # version ='1.1'
 # ---------------------------------------------------------------------------
 
-"""This module provides the Shopee Data Crawler functionality."""
+"""This module provides the Shopee Data Crawler functionality.
+
+Todo:\n
+1. very ugly codes too many if-else and for-loop, need to refactor\n
+2. move the following jobs to config.py or data_builder.py\n
+3. should use dynamic to represent data_source, not 'shopee'
+
+
+"""
 # shopee_data_explorer/shopee_crawler.py
 import time
 import ast
@@ -26,7 +34,7 @@ from shopee_data_explorer import (READ_INDEX_ERROR, \
     DATA_FOLDER_WRITE_ERROR,READ_PRODUCT_ERROR, READ_COMMENT_ERROR,SUCCESS)
 
 
-############# LOGGIING #############
+############# LOGGING #############
 #logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
 
 logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
@@ -63,8 +71,8 @@ mylogger.addHandler(ch)
 mylogger.addHandler(fh)
 
 ############# DEFAULT VARS #############
-DEFAULT_KEYWORD = '運動內衣'
-# PAGES stands for the number of pages you want to crawle, 1 page equals to 100 results
+DEFAULT_KEYWORD = '女性皮夾'
+# PAGES stands for the number of pages you want to crawler, 1 page equals to 100 results
 DEFAULT_PAGE_NUM = 1
 DEFAULT_PAGE_LENGTH = 10
 DEFAULT_IP_RANGES = ['45.136.231.43:7099', '45.142.28.20:8031','45.140.13.112:9125',\
@@ -102,20 +110,19 @@ DEFAULT_CHROME_WEBDRIVER = '/Users/yao-nienyang/Desktop/Workplace/chromedriver'
 ############# CLASS IMPLEMENTATION #############
 
 class CrawlerResponse(NamedTuple):
-    """data model to controller"""
+    """data model to Crawler response"""
     result: List[Dict[str, Any]]
     error: int
 
 class CrawlerResponseForDict(NamedTuple):
-    """data model to controller"""
+    """another data model for dict to Crawler response"""
     result: Dict[str, Any]
     error: int
 
 class CrawlerHandler:
-    """ this provides cralwer capabilities to read data from shopee"""
+    """ this provides crawler capabilities to read data from shopee"""
     def __init__(self, ip_addresses: List[str] \
         , proxy_auth: str,header: Dict[str, any], webdriver_path: str) -> None:
-        """ test"""
         self.ip_addresses = ip_addresses
         self.proxy_auth = proxy_auth
         self.header = header
@@ -131,7 +138,7 @@ class CrawlerHandler:
 ############# HELPER #############
 
     def _create_header_proxy(self)-> Dict[str,str]:
-        """test"""
+        """create the init proxy IP for selenium  """
         proxy_index = random.randint(0, len(self.ip_addresses) - 1)
         return {
         #"https": "https://{}@{}/".format(self.proxy_auth, self.ip_addresses[proxy_index]),
@@ -140,6 +147,7 @@ class CrawlerHandler:
         "http": f"http://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/"}
 
     def _create_proxy_seleniumwire(self) -> Dict[str,Dict[str,str]]:
+        """create the init proxy IP for seleniumwire  """
         options = {
                     'proxy': {
                         'http': self.instance_proxies['http'],
@@ -149,13 +157,14 @@ class CrawlerHandler:
         return options
 
     def _setup_chrome_options(self) -> webdriver.ChromeOptions:
+        """ set up the headless mode for selenium  """
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
         return chrome_options
 
     def _rotate_ip(self)-> None:
-        """test"""
+        """rotate the current IP from the list of proxy ip addresses"""
         proxy_index = random.randint(0, len(self.ip_addresses) - 1)
         mylogger.debug("The new rotated index: %s", str(proxy_index))
         self.instance_proxies = {
@@ -165,14 +174,14 @@ class CrawlerHandler:
         "http": f"http://{self.proxy_auth}@{self.ip_addresses[proxy_index]}/"}
 
     def _locate_myip(self) -> None:
-        """test"""
+        """locate my ip"""
         my_ip = requests.get('https://api.ipify.org').text
         mylogger.debug("My public IP address is %s", my_ip)
 
 ############# READER #############
 
     def _read_search_results(self,url:str,time_out:int=2) -> str:
-        """ test """
+        """ read serach results from the shopee search page by selenium """
         mylogger.debug("%s starts.", self._read_search_results.__name__)
         driver = webdriver.Chrome(self.path,options=self.chrome_options,\
             seleniumwire_options=self.seleniumwire_options)
@@ -187,7 +196,7 @@ class CrawlerHandler:
         return html
 
     def _read_id(self,url:str,time_out:int) -> str:
-        """ test """
+        """ read shopeid and itemid from shopee page by selenium"""
         mylogger.debug("%s starts.",self._read_id.__name__)
         driver = webdriver.Chrome(self.path,options=self.chrome_options,\
             seleniumwire_options=self.seleniumwire_options)
@@ -199,7 +208,7 @@ class CrawlerHandler:
         return html
 
     def _parse_search_result(self,html:str) -> List[str]:
-        """ test """
+        """ parse out the url of the product page from shopee """
         mylogger.debug("%s starts.",self._parse_search_result.__name__)
         soup = BeautifulSoup(html,features="html.parser")
         search_product_urls = [i.get('href') for i in soup.find_all('a',\
@@ -207,7 +216,7 @@ class CrawlerHandler:
         return search_product_urls
 
     def _parse_itemid(self,html:str) -> Tuple[str,str]:
-        """ test """
+        """ parse itemid from the shopee product page """
         mylogger.debug("%s starts.",self._parse_itemid.__name__)
         if 'itemId' in html:
             soup = BeautifulSoup(html,features="html.parser")
@@ -221,9 +230,9 @@ class CrawlerHandler:
             #print("can't find itemId")#print(soup.prettify())
             return ("","")
 
-    # todo: very urly codes too many if-else and for-loop, need to refactor
+    # todo: very ugly codes too many if-else and for-loop, need to refactor
     def _parse_shopid(self, html: str):
-        """ test """
+        """ parse out the shopid from the shopee product page """
         mylogger.debug("%s starts.",self._parse_shopid.__name__)
         if 'shopid' in html:
             if 'shopid=' in html:
@@ -253,7 +262,7 @@ class CrawlerHandler:
             return
 
     def read_a_page_selenium_search_indexs(self,keyword: int, page: int) -> CrawlerResponse:
-        """test"""
+        """read a pare of shopee search result - normally it contains 55 results by selenium"""
         mylogger.debug("%s starts.",self.read_a_page_selenium_search_indexs.__name__)
         timeout_1 = 2
         timeout_2 = 3
@@ -288,9 +297,14 @@ class CrawlerHandler:
 
 
     def read_search_indexs(self, keyword: str, page: int, page_length: int) -> CrawlerResponse:
-        """
-        get the serach result
-        page_num: the iterated number starting from 0, 1, 2, 3, .....etc
+        """read the serach result by shopee api
+
+        Args:
+            page (int): the iterated number starting from 0, 1, 2, 3, .....etc
+
+        Returns:
+            CrawlerResponse
+
         """
         page = page + 1
         #url = 'https://shopee.tw/api/v2/search_items/?by=relevancy&keyword=' + keyword \
@@ -346,7 +360,7 @@ class CrawlerHandler:
 
 
     def read_good_info(self,shop_id: int, item_id: int) -> CrawlerResponse:
-        """ get the details like articles and SKU """
+        """ get the good details like articles and SKU by shopee api """
 
         url = 'https://shopee.tw/api/v2/item/get?itemid=' + str(item_id) + '&shopid=' + \
             str(shop_id)
@@ -396,7 +410,7 @@ class CrawlerHandler:
 
 
     def read_good_comments(self,shop_id: int, item_id: int) -> CrawlerResponse:
-        """get the buyer's comment by using item_id and shop_id"""
+        """get the buyer's comment by using item_id and shop_id by shopee api"""
 
         url = 'https://shopee.tw/api/v1/comment_list/?item_id='+ str(item_id) + '&shop_id=' + \
         str(shop_id) + '&offset=0&limit=200&flag=1&filter=0'

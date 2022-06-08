@@ -6,7 +6,12 @@
 # version ='1.1'
 # ---------------------------------------------------------------------------
 
-"""This module provides the Shopee EDA functionality."""
+"""This module provides the Shopee EDA functionality.
+
+Todo:\n
+1. need to decouple this workflow for shopee from do_eda(). this need to works more generically
+
+"""
 # shopee_data_explorer/shopee_eda.py
 
 ####### utilities #########
@@ -27,19 +32,19 @@ from adjustText import adjust_text
 from shopee_data_explorer import SUCCESS
 
 class EDAResponse(NamedTuple):
-    """data model to controller"""
+    """data model to response to controller"""
     result: List[str]
     error: int
 
 class ShopeeEDA():
-    """ test """
-    ####### contant and Instance Variables ########
+    """ this class provides EDA functionality """
+    ####### constants and instance variables ########
 
     def __init__(self,keyword:str ,data_source: str, data_path:Path,charts:List[str],\
          product_data:pd.DataFrame,comments_data:pd.DataFrame,myfont:FontProperties,\
              chart_color=None)->None:
-        """thid class is doing EDA"""
-
+        """this class is doing EDA"""
+        self.owd = os.getcwd()
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
         if not chart_color:
@@ -61,18 +66,18 @@ class ShopeeEDA():
         self.data_source = data_source
 
     def rotate_color(self) -> str:
-        """ test """
+        """ rotate the color of the chart created by matplotlib """
         color_index = random.randint(0, len(self.colors_group) - 1)
         print("New color index: " + str(color_index))
         return self.colors_group[color_index]
 
     def clean_data(self) -> None:
-        """ test """
-        # divide price by 100000
+        """ correct the wrong column value for 'price' """
+        # divide price by 100000 as the original value is incorrect
         self.contents['price'] = self.contents['price'] / 100000
 
     def create_tags(self) -> None:
-        """ test """
+        """ extract and collect the tag (string before #, like #cool) """
         tag_list = []
         for i in self.contents['articles']:
             if isinstance(i,str):
@@ -88,13 +93,13 @@ class ShopeeEDA():
 
     def evaluation(self,the_str:str) -> Any:
         """
-        make string tranform to its orignal type
+        make string transforms to its original type
         such as '{'A':1}' --> {'A':1}
         """
         return ast.literal_eval(the_str)
 
     def process_rating(self) -> None:
-        """input the content to evaluation for coversion"""
+        """input the content to evaluation for conversion"""
         self.contents['item_rating'] = self.contents['item_rating'].apply(self.evaluation)
         self.contents['rating_star'] = self.contents['item_rating']\
             .apply(lambda x:x['rating_star'])
@@ -102,8 +107,8 @@ class ShopeeEDA():
             .apply(lambda x:np.sum( \
         x['rating_count']))
 
-    def create_preprocessed_dataframes(self):
-        """ test """
+    def create_preprocessed_dataframes(self) -> None:
+        """ the pre-processed step before creating the charts """
         # put sku into content
         comment_sku = self.comments.drop_duplicates('itemid')
         self.contents = self.contents.merge(comment_sku[['itemid', 'product_items']], \
@@ -112,10 +117,10 @@ class ShopeeEDA():
         self.contents_final = self.contents[['itemid','name','brand','Tag' ,'price', \
             'historical_sold',\
             'articles', 'shopid','rating_numbers','rating_star','liked_count']]
-        # mege content的'itemid', 'price','name'to comment
+        # merge content's'itemid', 'price','name'to comment
         self.comments = self.comments.merge(self.contents[['itemid', 'price','name']], \
         how = 'left', on='itemid')
-        # issue：remove duplicatied items
+        # issue：remove duplicated items
         # hint：drop_duplicates
         self.comments = self.comments.drop_duplicates()
         # get the key columns for comments_final
@@ -126,8 +131,8 @@ class ShopeeEDA():
         self.save_preprocessed_dataframes()
         os.chdir(owd)
 
-    def save_preprocessed_dataframes(self):
-        """ test """
+    def save_preprocessed_dataframes(self) -> None:
+        """ save the preprocessed data into two csvs """
         shopee_product_name = "shopee_processed_product_data.csv"
         shopee_comment_name = "shopee_processed_comment_data.csv"
         self.contents_final.to_csv(shopee_product_name,encoding = 'UTF-8-sig')
@@ -135,7 +140,7 @@ class ShopeeEDA():
 
 
     def make_figures(self,charts:list) -> EDAResponse:
-        """ test """
+        """ run iteratively to create the specified charts """
         errors = []
         candidates = [self.make_figure1, self.make_figure2, \
             self.make_figure3,self.make_figure4,self.make_figure5,self.make_figure6]
@@ -150,31 +155,31 @@ class ShopeeEDA():
                     #return FIGURE_ERROR
         return EDAResponse(errors,SUCCESS)
 
-    def prepare_figures_header(self):
-        """ test """
+    def prepare_figures_header(self) -> None:
+        """ creates the EDA report title  """
         html = f'<h1 style="font-size:60px; text-align:center;">{self.data_source} EDA charts for \
              {self.keyword}</h1>\n \
                 <hr style="border-top: 8px solid #bbb; border-radius: 5px;">\n'
-        with open('test.html','w',encoding="utf-8") as htm_file:
+        with open(f'{self.data_source}_eda_report.html','w',encoding="utf-8") as htm_file:
             htm_file.write(html)
 
     def make_pics_html(self, fig_object,num) -> int:
-        """ test """
-        owd = os.getcwd()
+        """ create the final report file in html and the pictures of each chart """
+        #owd = os.getcwd()
         os.chdir(self.data_path)
         tmpfile = BytesIO()
         fig_object.savefig(tmpfile, format='png')
         encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
         #html = '<img src=\'data:image/png;base64,{}\'>\n'.format(encoded)
         html = f'<img src=\'data:image/png;base64,{encoded}\'>\n'
-        with open('test.html','a',encoding="utf-8") as htm_file:
+        with open(f'{self.data_source}_eda_report.html','a',encoding="utf-8") as htm_file:
             htm_file.write(html)
         fig_object.savefig(f'figure{str(num)}.png', bbox_inches='tight')
-        os.chdir(owd)
+        os.chdir(self.owd)
         return SUCCESS
 
-    def make_figure1(self):
-        """ test """
+    def make_figure1(self) -> None:
+        """ create the 1st chart """
         plt.figure( figsize = (10,6))
         plt.scatter(self.contents_final['price'],self.contents_final['historical_sold'],
             color=self.chart_color,alpha=0.5)
@@ -189,8 +194,8 @@ class ShopeeEDA():
         return SUCCESS
 
 
-    def make_figure2(self):
-        """ test """
+    def make_figure2(self) -> None:
+        """ create the 2nd chart """
         product_data_melt_zero = self.contents_final[self.contents_final['rating_star']>3]
         plt.figure( figsize = (10,6))
         plt.scatter(product_data_melt_zero['rating_star'],product_data_melt_zero['rating_numbers'],
@@ -205,8 +210,8 @@ class ShopeeEDA():
         self.make_pics_html(plt,2)
         return SUCCESS
 
-    def make_figure3(self):
-        """ test """
+    def make_figure3(self) -> None:
+        """ create the 3rd chart """
         self.consumer_power = self.comments_final[['userid','price']].groupby('userid').sum()
         self.consumer_power = pd.concat([self.consumer_power,self.comments_final[['userid',\
             'price']].groupby('userid').mean()], axis=1)
@@ -225,8 +230,8 @@ class ShopeeEDA():
         self.make_pics_html(plt,3)
         return SUCCESS
 
-    def make_figure4(self):
-        """ test """
+    def make_figure4(self) -> None:
+        """ create the 4th chart """
         consumer_power_interval = pd.DataFrame(self.consumer_power['avg_purchase_price']\
             .value_counts())
         consumer_power_interval.sort_index(inplace=True)
@@ -243,8 +248,8 @@ class ShopeeEDA():
         self.make_pics_html(plt,4)
         return SUCCESS
 
-    def make_figure5(self):
-        """ test """
+    def make_figure5(self) -> None:
+        """ create the 5th chart """
         tags_list = []
         count_list = []
         like_list = []
@@ -294,11 +299,11 @@ class ShopeeEDA():
         return SUCCESS
 
 
-    def make_figure6(self):
-        """ test """
+    def make_figure6(self) -> None:
+        """ create the 6th chart """
         plt.figure( figsize = (10,6))
         plt.scatter(self.tag_data['total_likes'],self.tag_data['sales'],color=self.chart_color)
-        plt.title("Corelationship between tags and sales",fontsize=30,\
+        plt.title("Co-Relationship between tags and sales",fontsize=30,\
             fontproperties=self.myfont,color='white',bbox=dict(boxstyle='square,pad=0',\
                 fc=self.chart_color, ec='none'))
         #txt_height = 0.0037*(plt.ylim()[1] - plt.ylim()[0])
@@ -339,7 +344,10 @@ class ShopeeEDA():
         return SUCCESS
 
     def do_eda(self) -> EDAResponse:
-        """ test """
+        """ perform the workflow of the entire EDA """
+
+        #todo: need to decouple this workflow for shopee from do_eda(). this need to works
+        # more generically
         # preprocessing
         print("1. start preprocessing!")
         self.clean_data()
@@ -349,9 +357,9 @@ class ShopeeEDA():
         # drawing
         print("2. start drawing!")
         #os.chdir(self.data_path)
-        owd = os.getcwd()
+
         os.chdir(self.data_path)
         self.prepare_figures_header()
-        os.chdir(owd)
+        os.chdir(self.owd)
         read = self.make_figures(self.charts)
         return read

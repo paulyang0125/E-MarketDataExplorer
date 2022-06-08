@@ -23,7 +23,16 @@ CONFIG_FILE_PATH = CONFIG_DIR_PATH / "config.ini"
 
 #def init_app(data_path: str) -> int:
 def init_app(**kwargs) -> int:
-    """Initialize the application."""
+    """initialize the application
+
+    Args:
+        ``**kwargs`` (``**dict``): a dictionary contains the constants for the config file,\n
+        such as, data_path, ip address, proxy auth...which are used to write into the config file.
+
+    Returns:
+        status code (int): SUCCESS, DIR_ERROR, DATA_FOLDER_WRITE_ERROR, see __init__.py
+
+    """
     config_code, config_file_path = _init_config_file()
     if config_code != SUCCESS:
         return config_code

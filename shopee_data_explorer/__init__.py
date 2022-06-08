@@ -12,7 +12,7 @@
 __app_name__ = "shopee_data_explorer"
 __version__ = "1.1.0"
 
-#errors defintion
+#errors enumeration
 (
     SUCCESS,
     DIR_ERROR,
@@ -32,7 +32,7 @@ __version__ = "1.1.0"
 
 ) = range(15)
 
-#mode
+#mode enumeration
 (
     NA_MODE,
     ALL,
@@ -40,6 +40,7 @@ __version__ = "1.1.0"
     PRODUCT_COMMENTS,
 ) = range(4)
 
+#source enumeration
 (
     NA_SOURCE,
     SHOPEE,
@@ -47,18 +48,22 @@ __version__ = "1.1.0"
     AMAZON
 ) = range(4)
 
+#mode definition
+
 MODES = {
     ALL: "product_goods:product_comments",
     PRODUCT_ITEMS: "product_goods",
     PRODUCT_COMMENTS: "product_comments"
 }
 
+#data_source definition
 DATA_SOURCES ={
     SHOPEE: "shopee",
     PTT: "ptt",
     AMAZON: "amazon"
 }
 
+#error definition
 ERRORS = {
     DIR_ERROR: "Config directory error",
     FILE_ERROR: "Config file error",

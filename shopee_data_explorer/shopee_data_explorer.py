@@ -6,10 +6,16 @@
 # version ='1.1'
 # ---------------------------------------------------------------------------
 
-"""This module provides the Shopee Data Crawler functionality."""
+"""This module provides the Shopee Data Crawler functionality.
+
+Todo:\n
+1. move to data process\n
+2. define the data format of response here\n
+3. define and design the consistent responses across all functions between CLI and controller\n
+4. decouple mode here as it's used for shopee only, not other data sources
+"""
 # shopee_data_explorer/shopee_data_explorer.py
-# rptodo/rptodo.py
-#from pathlib import Path
+
 
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Tuple
@@ -51,18 +57,21 @@ class ScrapingInfoForList(NamedTuple):
     error: int
 
 class ScrapingInfoForDF(NamedTuple):
-    """ data model for index"""
+    """ data model for dataframe"""
     scraping_info: pd.DataFrame
     error: int
 
 
 class Explorer:
-    """ test """
+    """ this class acts as the MVC controller between the implementation of
+    crawlers and eda tools, and the CLI interface
+
+    """
     def __init__(self,data_path:Path,db_path:Path,ip_addresses: List[str], proxy_auth: str,\
         header: Dict[str, any], webdriver_path:str, data_source:int) -> None:
         # debug
-        print("1. header type: " + str(type(header)))
-        print("1. header items: " + str(header.items))
+        #print("1. header type: " + str(type(header)))
+        #print("1. header items: " + str(header.items))
         self._crawler_handler = CrawlerHandler(ip_addresses,proxy_auth,header,webdriver_path)
         self._data_processor = CrawlerDataProcesser(data_source)
         self._db_handler = DatabaseHandler(data_path,db_path)
@@ -72,7 +81,7 @@ class Explorer:
 
 
     def read_index_selenium(self, keyword: str,page_num: int) -> ScrapingInfo:
-        """read the index"""
+        """read the index by selenium"""
         scraper_init = {
             "keyword":keyword,
             "page_num": page_num,
@@ -93,7 +102,7 @@ class Explorer:
 
 
     def read_index_api(self, keyword: str,page_num: int,page_length: int) -> ScrapingInfo:
-        """read the index"""
+        """for testing/debug, read the index by shopee api"""
         scraper_init = {
             "keyword":keyword,
             "page_num": page_num,
@@ -129,7 +138,7 @@ class Explorer:
         return ScrapingInfo(scraper_response, read.error)
 
     def read_index(self, keyword: str,page_num: int,page_length: int) -> ScrapingInfo:
-        """read the index"""
+        """read the index by shopee api"""
         scraper_init = {
             "keyword":keyword,
             "page_num": page_num,
@@ -154,7 +163,7 @@ class Explorer:
 
 
     def read_good_details(self, shop_id: int, item_id: int) -> ScrapingInfo:
-        """test"""
+        """read good details by shopee api"""
         scraper_init = {
             "shop_id":shop_id,
             "item_id": item_id,
@@ -170,8 +179,8 @@ class Explorer:
 
 
     def read_good_comments(self,shop_id: int, item_id: int) -> ScrapingInfoForList:
-        """test"""
-
+        """read good comments by shopee api"""
+        # todo: definte and design the consistent responses between CLI and controller
         #scraper_init = {
         #    "shop_id":shop_id,
         #    "item_id": item_id,
@@ -210,7 +219,7 @@ class Explorer:
 
 
     def do_eda(self, product_csv_name:str, product_comment_name:str)-> shopee_eda.EDAResponse:
-        """test"""
+        """the main entry of EDA command that will generate 6 EDA charts with the pre-process """
         the_os, os_encode = self._detect_path_format_for_os()
         my_font = FontProperties(fname='tools'+ the_os + 'msj.ttf')
         product_csv_name_path = self.data_path.joinpath(product_csv_name)
@@ -240,7 +249,16 @@ class Explorer:
 
     def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
         ) -> ScrapingInfo:
-        """tests"""
+        """the main entry of scrap command that scraps data source with the specified
+           number of the result based on mode suer select.\n
+
+           page length is 50 here by default so suppose user should input multiplier of 50
+           otherwise use floor division that rounds any number down to the nearest integer,
+           so if 256 is given, the page should be 5 that will miss extra 6 items.\n
+
+        """
+        # todo: decouple mode here as it's used for shopee only, not other data sources
+
         # page length is 50 here by default so suppose user should input multiplier of 50
         # otherwise use floor division - // rounds any number down to the nearest integer.
         # so if 256 is given, the page should be 5 that will miss extra 6 items
@@ -253,7 +271,7 @@ class Explorer:
             "page_num": page_num,
             "page_length":page_length,
         }
-        # product_items_container is the aggrgator of product data
+        # product_items_container is the aggregator of product data
         product_items_container = pd.DataFrame()
         product_comments_container = pd.DataFrame()
 
@@ -269,7 +287,7 @@ class Explorer:
                 product_items['shopid'].tolist(),product_items['name'].tolist())),\
                 total=len(product_items['itemid'].tolist()), position=0, leave=True):
 
-                mylogger.info('# %i,scaraping %s ...', index, name[:30])
+                mylogger.info('# %i,scarping %s ...', index, name[:30])
 
                 if mode == shopee_data_explorer.ALL or mode == shopee_data_explorer.\
                     PRODUCT_ITEMS:
@@ -286,10 +304,10 @@ class Explorer:
                         (comment,product_comments_container)
 
             #debug
-            #print("scrapall->conatiner:head", product_items_container.head(5))
-            #print("scrapall->conatiner:tail", product_items_container.tail(5))
-            #print("scrapall->comment_conatiner:head", product_comments_container.head(5))
-            #print("scrapall->comment_conatiner:tail", product_comments_container.tail(5))
+            #print("scrapall->container:head", product_items_container.head(5))
+            #print("scrapall->container:tail", product_items_container.tail(5))
+            #print("scrapall->comment_container:head", product_comments_container.head(5))
+            #print("scrapall->comment_container:tail", product_comments_container.tail(5))
 
             if mode == shopee_data_explorer.ALL or mode == shopee_data_explorer.\
                     PRODUCT_ITEMS:
@@ -307,8 +325,8 @@ class Explorer:
                     return ScrapingInfo(read.response.to_dict(), read.error)
                 #self._data_processor.write_shopee_goods_data(product_items_container, keyword)
             #debug
-            #print("after:scrapall->conatiner:head", product_items_container.head(5))
-            #print("after:scrapall->conatiner:tail", product_items_container.tail(5))
+            #print("after:scrapall->container:head", product_items_container.head(5))
+            #print("after:scrapall->container:tail", product_items_container.tail(5))
             if mode == shopee_data_explorer.ALL or mode == shopee_data_explorer.\
                     PRODUCT_COMMENTS:
 

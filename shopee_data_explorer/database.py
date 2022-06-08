@@ -6,7 +6,15 @@
 # version ='1.1'
 # ---------------------------------------------------------------------------
 
-"""This module provides the database functionality."""
+"""This module provides the database functionality.
+
+
+Todo:\n
+1. use data_source to dynamically update, not hardcoded "shopee"\n
+2. implement write_index and read_index and List cli command.
+
+
+"""
 # shopee_data_explorer/database.py
 import os
 import json
@@ -27,23 +35,24 @@ Path.home().joinpath(
 )
 
 class DBResponseForIndex(NamedTuple):
-    """test"""
+    """this class defines the format of database response for index in JSON"""
     response: List[Dict[str, Any]]
     error: int
 
 class DBResponseForCSV(NamedTuple):
-    """test"""
+    """this class defines the format of database response for data in CSV"""
     response: pd.DataFrame
     error: int
 
 class DatabaseHandler:
-    """test"""
+    """this class provides the functions of read and write into CSV and JSON for scrapped data
+    """
     def __init__(self, data_path: Path, db_path: Path) -> None:
         self._data_path = data_path
         self._db_path = db_path
 
     def read_index(self) -> DBResponseForIndex:
-        """test"""
+        """read the search index data from JSON"""
         try:
             with self._db_path.open("r") as db_instance:
                 try:
@@ -55,7 +64,7 @@ class DatabaseHandler:
 
     def write_csv(self,product_container:pd.DataFrame , my_keyword:str, data_source: int, \
         crawler_mode: str) -> DBResponseForCSV:
-        """test"""
+        """write the scrapped data stored in dataframe into CSV"""
         try:
             os.chdir(self._data_path)
             #crawler_mode = MODES[mode]
@@ -63,22 +72,22 @@ class DatabaseHandler:
             source = DATA_SOURCES[data_source]
             file_name = f'{source}_{my_keyword}_{crawler_mode}.csv'
             product_container.to_csv(file_name,encoding = 'utf-8-sig')
-            print(f"the conatiner has wrote into {file_name} in {self._data_path}")
+            print(f"the container has wrote into {file_name} in {self._data_path}")
             return DBResponseForCSV(product_container.head(5), SUCCESS)
         except OSError:  # Catch file IO problems
             return DBResponseForCSV(pd.DataFrame.empty, CSV_WRITE_ERROR)
 
     def write_index(self,product_items:pd.DataFrame) -> DBResponseForIndex:
-        """test"""
+        """write the search index data into JSON"""
         res_list = []
         res = {}
         try:
-            with self._db_path.open("w") as db_instannce:
+            with self._db_path.open("w") as db_instance:
                 res['itemid'] = product_items['itemid'].tolist()
                 res['shopid'] = product_items['shopid'].tolist()
                 res['name'] = product_items['name'].tolist()
                 res_list.append(res)
-                json.dump(res_list, db_instannce, indent=4)
+                json.dump(res_list, db_instance, indent=4)
                 return DBResponseForIndex(res_list, SUCCESS)
         except OSError:  # Catch file IO problems
             return DBResponseForIndex(res_list, DB_WRITE_ERROR)

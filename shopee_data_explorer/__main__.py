@@ -13,7 +13,14 @@
 from shopee_data_explorer import cli, __app_name__
 
 def main():
-    """ entry of cli """
+    """ the entry to the command interface
+    Args:
+        None
+
+    Returns:
+        None
+
+    """
     cli.app(prog_name=__app_name__)
 
 if __name__ == "__main__":

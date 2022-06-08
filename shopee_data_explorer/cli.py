@@ -6,7 +6,16 @@
 # version ='1.1'
 # ---------------------------------------------------------------------------
 
-"""This module provides the Shopee Data Explorer CLI."""
+"""This module provides the Shopee Data Explorer CLI.
+
+
+Todo at v1.3:\n
+1. will move init_data job to config.py or data_builder.py in v1.3+\n
+2. will implement retry by adding the abstract class to decouple the retry mechanism
+
+
+"""
+
 # shopee_data_explorer/cli.py
 import logging
 import sys
@@ -26,26 +35,30 @@ def init(
         str(shopee_crawler.DEFAULT_DATA_PATH),
         "--data-path",
         "-data",
-        prompt="shopee explorer data location?",
+        prompt="e-market data explorer data location?",
+        help="where e-market data explorer will save its finding on your OS",
     ),
      db_path: str = typer.Option(
         str(database.DEFAULT_DB_FILE_PATH),
         "--db-path",
         "-db",
-        prompt="explorer database location?",
+        prompt="e-market data database location?",
+        help="where e-market data explorer will save the index database on your OS",
     ),
     ip_addresses: str = typer.Option(
         str(shopee_crawler.DEFAULT_IP_RANGES),
         "--ips-range",
         "-ips",
-        prompt="shopee explorer proxy ip ranges?",
+        prompt="e-market data explorer proxy ip ranges?",
+        help="e-market data explorer will rotate its IP based on those proxy IP addresses",
     ),
 
     proxy_auth: str = typer.Option(
         str(shopee_crawler.DEFAULT_PROXY_AUTH),
         "--proxy-auth",
         "-proxy",
-        prompt="shopee explorer proxy credential?",
+        prompt="e-market data explorer proxy credential?",
+        help="e-market data explorer will access the proxy server based on this credential",
     ),
     #my_header: str = typer.Option(
     #    str(shopee_crawler.DEFAULT_HEADER),
@@ -58,13 +71,20 @@ def init(
         str(shopee_crawler.DEFAULT_CHROME_WEBDRIVER),
         "--webdriver-path",
         "-webdriver",
-        prompt="shopee explorer webdriver path?",
+        prompt="e-market data explorer webdriver path?",
+        help="this is where you store the selenium webdriver. currently we can support Chrome",
     ),
 
-    data_source: int = typer.Option(1, "--data_source", "-d", min=1, max=3),
+    data_source: int = typer.Option(
+        1, "--data_source", "-d", min=1, max=3,
+        prompt="e-market data explorer data source?",
+        help="1 indicates you will scrap Shopee, 2 is for PPT and 3 stands for Amazon",
+    ),
 
 ) -> None:
-    """Initialize the shopee explorer data folder."""
+    """
+    Initialize the shopee explorer data folder.
+    """
     app_init_error,config_file_path = config.init_app(data_path=data_path, \
         ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=shopee_crawler.DEFAULT_HEADER, \
             webdriver_path=webdriver_path,data_source=data_source,db_path=db_path)
@@ -91,7 +111,18 @@ def init(
         typer.secho(f"The shopee explorer data is {data_path}", fg=typer.colors.GREEN)
 
 def get_explorer() -> shopee_data_explorer.Explorer:
-    """test"""
+    """reads data in configs and passes them as args to initialize
+    shopee_data_explorer.Explorer class
+
+    Args:
+        None
+
+    Returns:
+        the instance of shopee_data_explorer.Explorer
+
+
+    """
+
     #def __init__(self,data_path:Path,ip_addresses: List[str], proxy_auth: str, \
     #header: Dict[str, any], webdriver_path:str) -> None:
     if config.CONFIG_FILE_PATH.exists():
@@ -125,14 +156,33 @@ def _version_callback(value: bool) -> None:
 
 @app.command()
 #input arg -> keyword: str, page_num: int,page_length
-#
+
 def read_search(
-    required_args :List[str] = typer.Argument(...),
-    searcher_type: int = typer.Option(1, "--searcher_type", "-t", min=1, max=2),
-    # todo: will implement retry by adding the abstract class to decople the retry mecanism
+    required_args :List[str] = typer.Argument(
+        ...,
+        help=
+        """
+        Here expects three arguments in sequence \n
+        1. keyword you want to search for \n
+        2. the number of page \n
+        3. the length of page \n
+        The total amount of item to be searched equals
+        the multiplication of the second argument and the third.
+        """
+        ),
+        searcher_type: int = typer.Option(
+        1, "--searcher_type", "-t", min=1, max=2,
+        help="the default is 1 meaning e-market explorer will scrap data over \
+data source API and choosing 2 will use selenium to scrap shopee website",
+        ),
+    # todo: will implement retry by adding the abstract class to decouple the retry mechanism
     #retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
 ) -> None:
-    """for test/debug, read search data"""
+    """
+    Reads search data from shopee (for debugging). This belongs to \
+the debugging feature which will only read the search results as the index.
+
+    """
 
     #print(f'inputs are {required_args}, {searcher_type}, {retry}')
     if searcher_type == 1:
@@ -193,10 +243,23 @@ def read_search(
 #input arg -> file1: csv, file2: csv
 
 def eda(
-    required_args :List[str] = typer.Argument(...),
+    required_args :List[str] = typer.Argument(
+        ...,
+        help=
+        """
+            here expects two arguments in sequence\n
+            1. the scraped CSV name xxx_YOUR_KEYWORD_product_goods.csv\n
+            2. another scraped CSV name xxx_YOUR_KEYWORD_product_comments.csv.\n
+            For example, e-market-data-explorer eda file1 file2.
+        """
+            ,
+        ),
 
 ) -> None:
-    """EDA source data from csv files"""
+    """
+    Create EDA process and charts from csv files
+
+    """
     # debug
     #print(f'inputs are args - {required_args}')
     if len(required_args) != 2:
@@ -217,7 +280,7 @@ def eda(
         raise typer.Exit(1)
     else:
         typer.secho(
-            f"""eda for {products_csv_name} and {comment_csv_name} completes sucesssfully"""
+            f"""eda for {products_csv_name} and {comment_csv_name} completes successfully"""
             f"""go to data folder to see the results""",
             fg=typer.colors.GREEN,
         )
@@ -227,14 +290,42 @@ def eda(
 #input arg -> keyword: str, num of product: int, page_length: int (optional),
 #DEFAULT_PAGE_LENGTH = 10
 def scrap(
-    required_args :List[str] = typer.Argument(...),
+    required_args :List[str] = typer.Argument(
+        ...,
+        help=
+        """
+        Here expects three inputs in sequence\n
+        1. keyword you want to search for\n
+        2. the number of product\n
+        3. the length of page (optional)\n
+        For example, e-market-data explorer scrap basketball 100
+        """,
+        ),
     #source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
-    mode: int = typer.Option(1, "--scrap_mode_for_shopee", "-sm", min=1, max=3),
-    searcher_type: int = typer.Option(1, "--searcher_type", "-st", min=1, max=2),
-    retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
-    verbose_level: int = typer.Option(3, "--verbose", "-ve", min=1, max=3)
+    mode: int = typer.Option(
+        1, "--scrap_mode_for_shopee", "-sm", min=1, max=3,
+        help="we have three modes ALL, PRODUCT_ITEMS, PRODUCT_COMMENTS available. user can \
+choose to scrap all two data (product or comment) or both for ALL. the default is 1 for ALL."
+        ),
+    searcher_type: int = typer.Option(
+        1, "--searcher_type", "-st", min=1, max=2,
+        help="he default is 1 meaning e-market explorer will scrap data over \
+Shopee API and choosing another 2 will use selenium to scrap shopee website."
+        ),
+    retry: int = typer.Option(
+        1, "--retry", "-r", min=1, max=5,
+        help="this is not yet supported, we'll target v1.3 to implement."
+        ),
+    verbose_level: int = typer.Option(
+        3, "--verbose", "-ve", min=1, max=3,
+        help="verbose 1 dumps all detailed debugging info, the default 3 just print \
+error message if something bad happens."
+        )
 ) -> None:
-    """scrap source data"""
+    """
+    Scrap commercial data from the data source specified by user
+
+    """
     if verbose_level == 1:
         logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
             datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
@@ -252,10 +343,10 @@ def scrap(
 
 
     # debug
-    #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, seacher-typr - \
+    #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, searcher-type - \
     #    {searcher_type}, retry - {retry}')
 
-    mylogger.debug('inputs are args - %s, mode - %i, seacher-type - \
+    mylogger.debug('inputs are args - %s, mode - %i, searcher-type - \
         %i, retry - %i, verbose - %i', required_args, mode, searcher_type, retry, verbose_level)
 
     if searcher_type == 1:
@@ -289,7 +380,7 @@ def scrap(
                 raise typer.Exit(1)
             else:
                 typer.secho(
-                    f"""explorer: "{response['keyword']}" was searched and collected sucesssfully"""
+                    f"""explorer: "{response['keyword']}" was searched and collected successfully"""
                     f"""with options: page_num {response['page_num']} and page_length \
                     {response['page_length']} """,
                     fg=typer.colors.GREEN,
@@ -313,6 +404,18 @@ def main(
         is_eager=True,
     )
 ) -> None:
-    """ show app version"""
+    """
+    E-Market Data Explorer is a Python-based crawler and exploratory data analysis(EDA) tool
+    for marketing specialties who would like to conduct the STP methods for working out
+    their marketing strategy for sale and promotion.
+
+    Updated for E-Market Data Explorer 1.1, June 2022
+
+    Author:
+
+    Currently written maintained by Paul Yang <paulyang0125@gmail> and \
+Kana Kunikata <vinaknkt@gmail.com>.
+
+    """
     typer.secho(f"""{version}""",fg=typer.colors.GREEN)
     return
