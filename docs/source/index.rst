@@ -6,15 +6,16 @@ for marketing specialties who would like to conduct the STP methods for working 
 their marketing strategy for sale and promotion.
 
 It pulls data from the e-commerce sites, such as Shopee, Amazon and PPT to the CSV file
-and then user explore CSV files or can make use of our EDA command to auto-generate the
+and then user can explore CSV files or can make use of our EDA command to auto-generate the
 EDA charts. AS a result, marketing folks can easily know about trends and insights from
 data by looking at each chart.
 
-**E-Market Data Explorer** is the subset of another STP python module (now it's under
-construction). when it's done, marketing staffs can just use our toolbox to streamline
-the prior time-consuming processes of conducting STP by typing a few clicks.
+**E-Market Data Explorer** is the subset of another our development effort in
+STP python module (now it's under construction). When it's done, marketing staffs can
+just use our toolbox to streamline the prior time-consuming processes of conducting
+STP by typing a few clicks.
 
-Check out the :doc:`usage` section for further information, including
+Check out the :doc:`get_started` section for further information, including
 how to :ref:`installation` the project.
 
 .. note::
@@ -26,5 +27,7 @@ Contents
 
 .. toctree::
 
-   usage
+   get_started
+   eda_chart
    api
+   author
