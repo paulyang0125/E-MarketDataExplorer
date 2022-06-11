@@ -136,3 +136,13 @@ myvenv/
 shopee_crawler/backup_codes/
 
 shopee_crawler/temp_csvs_for_test/
+backup_codes_v1.0/
+
+emarket_data_explorer/backup_cli_different_comments.py
+emarket_data_explorer/review_planning.py
+*.log
+
+backup_testlog_forstudy/
+csv_backup/
+making_doc_data/
+tutorial.docx
