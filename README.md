@@ -1,5 +1,6 @@
-# E-MarketDataExplorer
+[![Documentation Status](https://readthedocs.org/projects/e-marketdataexplorer/badge/?version=latest)](https://e-marketdataexplorer.readthedocs.io/en/latest/?badge=latest)
 
+# E-MarketDataExplorer
 
 E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale.
 
@@ -29,6 +30,7 @@ Please refer to the [E-Market Data Explorer online documentation](https://e-mark
 
 API docs is under actively development but we target v1.3 to release it.
 
+
 ## Python Dependencies
 
 Please refer to requirements.txt and install all the required packages by
@@ -36,9 +38,11 @@ Please refer to requirements.txt and install all the required packages by
 $ pip install -r requirements.txt
 ```
 
+
 ## License
 
 It is distributed under the Apache License. See LICENSE.txt for more information.
+
 
 ## Contact
 
