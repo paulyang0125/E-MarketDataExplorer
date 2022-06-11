@@ -1,2 +1,47 @@
-# ShopeeDataExplorer
-search and collect product data and explore data through Exploratory Data Analysis (EDA) process
+# E-MarketDataExplorer
+
+
+E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale.
+
+
+## Preview
+
+#### E-MarketDataExplorer HELP
+
+![app preview](https://user-images.githubusercontent.com/4502089/173171621-99f56ddd-62d8-4b82-8f31-96f5e6a85fe3.png)
+
+#### E-MarketDataExplorer SCRAP
+
+![app test](https://user-images.githubusercontent.com/4502089/173171638-7c8f5aba-c890-430a-9809-ed2acdff7a24.png)
+
+
+#### E-MarketDataExplorer EDA
+
+![app test](https://user-images.githubusercontent.com/4502089/173171695-fab53c6f-d429-466b-ab28-12c9fd57d2f9.png)
+
+
+## Quick-start
+
+Please refer to the [E-Market Data Explorer online documentation](https://e-marketdataexplorer.readthedocs.io/en/latest/index.html) for Get-Started, EDA explanation, Testing and Troubleshooting
+
+
+## For Developer
+
+API docs is under actively development but we target v1.3 to release it.
+
+## Python Dependencies
+
+Please refer to requirements.txt and install all the required packages by
+```
+$ pip install -r requirements.txt
+```
+
+## License
+
+It is distributed under the Apache License. See LICENSE.txt for more information.
+
+## Contact
+
+[Paul Yang](https://github.com/paulyang0125) ; [Kana Kunikata](https://github.com/vinavinak)
+
+
