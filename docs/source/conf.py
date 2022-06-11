@@ -1,5 +1,11 @@
 # Configuration file for the Sphinx documentation builder.
 
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here.
+import pathlib
+import sys
+sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+
 # -- Project information
 
 project = 'E-Market-Data-Explorer'
