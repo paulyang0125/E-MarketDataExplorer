@@ -469,7 +469,7 @@ DEFAULT_DATA_PATH = Path.home().joinpath(
 
 def get_data_path(config_file: Path) -> Path:
     """Return the current path to the shopee_data."""
-    config_parser = configparser.ConfigParser()
+    config_parser = configparser.ConfigParser(interpolation=None)
     config_parser.read(config_file)
     return Path(config_parser["General"]["shopee_data"])
 

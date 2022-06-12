@@ -12,14 +12,15 @@
 
 import configparser
 from pathlib import Path
-
 import typer
 
 from emarket_data_explorer import \
     (DIR_ERROR, FILE_ERROR, DATA_FOLDER_WRITE_ERROR, SUCCESS, __app_name__)
 
 CONFIG_DIR_PATH = Path(typer.get_app_dir(__app_name__))
-CONFIG_FILE_PATH = CONFIG_DIR_PATH / "config.ini"
+#CONFIG_FILE_PATH = Path(typer.get_app_dir(__app_name__)).joinpath("/" + "config.ini")
+CONFIG_FILE_PATH = Path(typer.get_app_dir(__app_name__)) / "config.ini"
+#CONFIG_FILE_PATH = CONFIG_DIR_PATH / "config.ini"
 
 #def init_app(data_path: str) -> int:
 def init_app(**kwargs) -> int:
