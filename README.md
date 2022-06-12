@@ -1,5 +1,11 @@
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/paulyang0125/E-MarketDataExplorer)
 [![Documentation Status](https://readthedocs.org/projects/e-marketdataexplorer/badge/?version=latest)](https://e-marketdataexplorer.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer.svg?branch=main)](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer)
+[![](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+![t](https://img.shields.io/badge/status-maintained-yellow.svg)
+[![](https://img.shields.io/github/license/paulyang0125/E-MarketDataExplorer.svg)](https://github.com/paulyang0125/E-MarketDataExplorer/blob/main/LICENSE)
+![GitHub repo size](https://img.shields.io/github/repo-size/paulyang0125/E-MarketDataExplorer)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
 # E-MarketDataExplorer
 
