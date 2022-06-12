@@ -190,7 +190,7 @@ the debugging feature which will only read the search results as the index.
             typer.secho(
             f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
         )
-            raise typer.Exit(1)
+            raise typer.Exit(2)
         else:
             keyword = required_args[0]
             page_num = int(required_args[1])
@@ -201,7 +201,7 @@ the debugging feature which will only read the search results as the index.
                 typer.secho(
                     f'Adding to-do failed with "{ERRORS[error]}"', fg=typer.colors.RED
                 )
-                raise typer.Exit(1)
+                raise typer.Exit(5)
             else:
                 typer.secho(
                     f"""explorer: "{response['keyword']}" was searched """

@@ -48,6 +48,7 @@ class DatabaseHandler:
     """this class provides the functions of read and write into CSV and JSON for scrapped data
     """
     def __init__(self, data_path: Path, db_path: Path) -> None:
+        self.owd = os.getcwd()
         self._data_path = data_path
         self._db_path = db_path
 
@@ -73,8 +74,10 @@ class DatabaseHandler:
             file_name = f'{source}_{my_keyword}_{crawler_mode}.csv'
             product_container.to_csv(file_name,encoding = 'utf-8-sig')
             print(f"the container has wrote into {file_name} in {self._data_path}")
+            os.chdir(self.owd)
             return DBResponseForCSV(product_container.head(5), SUCCESS)
         except OSError:  # Catch file IO problems
+            os.chdir(self.owd)
             return DBResponseForCSV(pd.DataFrame.empty, CSV_WRITE_ERROR)
 
     def write_index(self,product_items:pd.DataFrame) -> DBResponseForIndex:
