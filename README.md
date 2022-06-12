@@ -1,6 +1,7 @@
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/paulyang0125/E-MarketDataExplorer)
 [![Documentation Status](https://readthedocs.org/projects/e-marketdataexplorer/badge/?version=latest)](https://e-marketdataexplorer.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer.svg?branch=main)](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer)
+[![Maintainability](https://api.codeclimate.com/v1/badges/b873efdf1a77d343aeb3/maintainability)](https://codeclimate.com/github/paulyang0125/E-MarketDataExplorer/maintainability)
 [![](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 ![t](https://img.shields.io/badge/status-maintained-yellow.svg)
 [![](https://img.shields.io/github/license/paulyang0125/E-MarketDataExplorer.svg)](https://github.com/paulyang0125/E-MarketDataExplorer/blob/main/LICENSE)
