@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/e-marketdataexplorer/badge/?version=latest)](https://e-marketdataexplorer.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer.svg?branch=main)](https://app.travis-ci.com/paulyang0125/E-MarketDataExplorer)
 
 # E-MarketDataExplorer
 
