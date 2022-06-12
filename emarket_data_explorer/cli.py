@@ -38,28 +38,28 @@ def init(
         prompt="e-market data explorer data location?",
         help="where e-market data explorer will save its finding on your OS",
     ),
-     db_path: str = typer.Option(
-        str(database.DEFAULT_DB_FILE_PATH),
-        "--db-path",
-        "-db",
-        prompt="e-market data database location?",
-        help="where e-market data explorer will save the index database on your OS",
-    ),
-    ip_addresses: str = typer.Option(
-        str(shopee_crawler.DEFAULT_IP_RANGES),
-        "--ips-range",
-        "-ips",
-        prompt="e-market data explorer proxy ip ranges?",
-        help="e-market data explorer will rotate its IP based on those proxy IP addresses",
-    ),
+    #  db_path: str = typer.Option(
+    #     str(database.DEFAULT_DB_FILE_PATH),
+    #     "--db-path",
+    #     "-db",
+    #     prompt="e-market data database location?",
+    #     help="where e-market data explorer will save the index database on your OS",
+    # ),
+    # ip_addresses: str = typer.Option(
+    #     str(shopee_crawler.DEFAULT_IP_RANGES),
+    #     "--ips-range",
+    #     "-ips",
+    #     prompt="e-market data explorer proxy ip ranges?",
+    #     help="e-market data explorer will rotate its IP based on those proxy IP addresses",
+    # ),
 
-    proxy_auth: str = typer.Option(
-        str(shopee_crawler.DEFAULT_PROXY_AUTH),
-        "--proxy-auth",
-        "-proxy",
-        prompt="e-market data explorer proxy credential?",
-        help="e-market data explorer will access the proxy server based on this credential",
-    ),
+    # proxy_auth: str = typer.Option(
+    #     str(shopee_crawler.DEFAULT_PROXY_AUTH),
+    #     "--proxy-auth",
+    #     "-proxy",
+    #     prompt="e-market data explorer proxy credential?",
+    #     help="e-market data explorer will access the proxy server based on this credential",
+    # ),
     #my_header: str = typer.Option(
     #    str(shopee_crawler.DEFAULT_HEADER),
     #    "--myheader",
@@ -67,13 +67,13 @@ def init(
     #    prompt="shopee explorer http/https header?",
     #),
 
-    webdriver_path: str = typer.Option(
-        str(shopee_crawler.DEFAULT_CHROME_WEBDRIVER),
-        "--webdriver-path",
-        "-webdriver",
-        prompt="e-market data explorer webdriver path?",
-        help="this is where you store the selenium webdriver. currently we can support Chrome",
-    ),
+    # webdriver_path: str = typer.Option(
+    #     str(shopee_crawler.DEFAULT_CHROME_WEBDRIVER),
+    #     "--webdriver-path",
+    #     "-webdriver",
+    #     prompt="e-market data explorer webdriver path?",
+    #     help="this is where you store the selenium webdriver. currently we can support Chrome",
+    # ),
 
     data_source: int = typer.Option(
         1, "--data_source", "-d", min=1, max=3,
@@ -85,8 +85,15 @@ def init(
     """
     Initialize the shopee explorer data folder.
     """
+    db_path = str(database.DEFAULT_DB_FILE_PATH)
+    ip_addresses = str(shopee_crawler.DEFAULT_IP_RANGES)
+    proxy_auth = str(shopee_crawler.DEFAULT_PROXY_AUTH)
+    my_header = shopee_crawler.DEFAULT_HEADER #it's a dict
+    webdriver_path = shopee_crawler.DEFAULT_CHROME_WEBDRIVER
+
+
     app_init_error,config_file_path = config.init_app(data_path=data_path, \
-        ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=shopee_crawler.DEFAULT_HEADER, \
+        ip_addresses=ip_addresses, proxy_auth=proxy_auth,my_header=my_header, \
             webdriver_path=webdriver_path,data_source=data_source,db_path=db_path)
 
     if app_init_error:
@@ -139,8 +146,9 @@ def get_explorer() -> shopee_data_explorer.Explorer:
 
     if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
         and webdriver_path and isinstance(my_header,Dict) and data_source:
-        return shopee_data_explorer.Explorer(data_path,db_path,ip_addresses,proxy_auth,my_header,\
-            webdriver_path, int(data_source))
+        return shopee_data_explorer.Explorer(data_path=data_path,db_path=db_path,\
+            ip_addresses=ip_addresses,proxy_auth=proxy_auth,my_header=my_header, \
+                webdriver_path=webdriver_path, data_source=int(data_source))
     else:
         typer.secho(
             'the config arguments data not found. Please, run "shopee_data_explorer init"',
@@ -377,7 +385,7 @@ error message if something bad happens."
                 typer.secho(
                     f'failed with "{ERRORS[error]}"', fg=typer.colors.RED
                 )
-                raise typer.Exit(1)
+                raise typer.Exit(error)
             else:
                 typer.secho(
                     f"""explorer: "{response['keyword']}" was searched and collected successfully"""
@@ -390,7 +398,7 @@ error message if something bad happens."
             "sorry, it's not supported yet. please wait for the next version",
              fg=typer.colors.RED,
         )
-        raise typer.Exit(1)
+        raise typer.Exit(10)
 
 
 @app.callback()

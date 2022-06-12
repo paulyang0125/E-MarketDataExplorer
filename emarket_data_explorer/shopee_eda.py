@@ -40,30 +40,31 @@ class ShopeeEDA():
     """ this class provides EDA functionality """
     ####### constants and instance variables ########
 
-    def __init__(self,keyword:str ,data_source: str, data_path:Path,charts:List[str],\
-         product_data:pd.DataFrame,comments_data:pd.DataFrame,myfont:FontProperties,\
-             chart_color=None)->None:
+    # def __init__(self,keyword:str ,data_source: str, data_path:Path,chart_groups:List[str],\
+    #      product_data:pd.DataFrame,comments_data:pd.DataFrame,my_font:FontProperties,\
+    #          chart_color=None)->None:
+    def __init__(self,**kwargs)->None:
         """this class is doing EDA"""
         self.owd = os.getcwd()
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
-        if not chart_color:
+        if not kwargs['chart_color']:
             self.colors_group = ['#427f8f','#8B0000','#559db0','#8B0000','#0000FF','#FF6347',\
             '#006400','#4682B4','#4169E1','#D2691E']
             self.chart_color = self.rotate_color()
         else:
-            self.chart_color = chart_color
-        self.comments = comments_data
-        self.contents = product_data
-        self.myfont = myfont
+            self.chart_color = kwargs['chart_color']
+        self.comments = kwargs['comments_data']
+        self.contents = kwargs['product_data']
+        self.my_font = kwargs['my_font']
         self.contents_final = pd.DataFrame()
         self.comments_final = pd.DataFrame()
         self.tag_data = pd.DataFrame()
         self.consumer_power = pd.DataFrame()
-        self.charts = charts
-        self.data_path = data_path
-        self.keyword = keyword
-        self.data_source = data_source
+        self.charts = kwargs['chart_groups']
+        self.data_path = kwargs['data_path']
+        self.keyword = kwargs['keyword']
+        self.data_source = kwargs['data_source']
 
     def rotate_color(self) -> str:
         """ rotate the color of the chart created by matplotlib """
@@ -201,10 +202,10 @@ class ShopeeEDA():
         plt.scatter(product_data_melt_zero['rating_star'],product_data_melt_zero['rating_numbers'],
             color=self.chart_color,
             alpha=0.5)
-        plt.title("Comparison of rating products",fontsize=30,fontproperties=self.myfont,\
+        plt.title("Comparison of rating products",fontsize=30,fontproperties=self.my_font,\
             color='white',bbox=dict(boxstyle='square,pad=0', fc=self.chart_color, ec='none'))
-        plt.ylabel("Sum of Rating Items",fontsize=20,fontproperties=self.myfont)
-        plt.xlabel("Star Rating",fontsize=20,fontproperties=self.myfont)
+        plt.ylabel("Sum of Rating Items",fontsize=20,fontproperties=self.my_font)
+        plt.xlabel("Star Rating",fontsize=20,fontproperties=self.my_font)
         plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,2)
@@ -221,10 +222,10 @@ class ShopeeEDA():
             ['total_amount_of_money_spent'],
             color=self.chart_color,
             alpha=0.5)
-        plt.title("Summary of Consumer Purchasing Power",fontsize=30,fontproperties=self.myfont\
+        plt.title("Summary of Consumer Purchasing Power",fontsize=30,fontproperties=self.my_font\
             ,color='white',bbox=dict(boxstyle='square,pad=0', fc=self.chart_color, ec='none'))
-        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.myfont)
-        plt.ylabel("Total amount of money spent",fontsize=20,fontproperties=self.myfont)
+        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.my_font)
+        plt.ylabel("Total amount of money spent",fontsize=20,fontproperties=self.my_font)
         plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,3)
@@ -239,10 +240,10 @@ class ShopeeEDA():
         plt.figure( figsize = (10,6))
         plt.scatter(consumer_power_interval.index,consumer_power_interval,color=self.chart_color)
         plt.title("Deep-dive of Consumer Purchasing Power",fontsize=30,\
-            fontproperties=self.myfont,color='white',bbox=dict(boxstyle='square,pad=0',\
+            fontproperties=self.my_font,color='white',bbox=dict(boxstyle='square,pad=0',\
                  fc=self.chart_color, ec='none'))
-        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.myfont)
-        plt.ylabel("Total amount of customer",fontsize=20,fontproperties=self.myfont)
+        plt.xlabel("Average purchase price",fontsize=20,fontproperties=self.my_font)
+        plt.ylabel("Total amount of customer",fontsize=20,fontproperties=self.my_font)
         plt.grid(True)
         plt.tight_layout()
         self.make_pics_html(plt,4)
@@ -289,10 +290,10 @@ class ShopeeEDA():
         plt.figure( figsize = (10,6))
         plt.bar(self.tag_data['Tag'][:10],  self.tag_data['total_usage'][:10],\
             color=self.chart_color)
-        plt.title("Tag rankings",fontsize=30,fontproperties=self.myfont,color='white',\
+        plt.title("Tag rankings",fontsize=30,fontproperties=self.my_font,color='white',\
             bbox=dict(boxstyle='square,pad=0', fc=self.chart_color, ec='none'))
-        plt.xlabel("Tag Name",fontsize=20,fontproperties=self.myfont)
-        plt.ylabel("Total Usage",fontsize=20,fontproperties=self.myfont)
+        plt.xlabel("Tag Name",fontsize=20,fontproperties=self.my_font)
+        plt.ylabel("Total Usage",fontsize=20,fontproperties=self.my_font)
         plt.xticks(fontsize=20,rotation=90)
         plt.tight_layout()
         self.make_pics_html(plt,5)
@@ -304,7 +305,7 @@ class ShopeeEDA():
         plt.figure( figsize = (10,6))
         plt.scatter(self.tag_data['total_likes'],self.tag_data['sales'],color=self.chart_color)
         plt.title("Co-Relationship between tags and sales",fontsize=30,\
-            fontproperties=self.myfont,color='white',bbox=dict(boxstyle='square,pad=0',\
+            fontproperties=self.my_font,color='white',bbox=dict(boxstyle='square,pad=0',\
                 fc=self.chart_color, ec='none'))
         #txt_height = 0.0037*(plt.ylim()[1] - plt.ylim()[0])
         #txt_width = 0.018*(plt.xlim()[1] - plt.xlim()[0])

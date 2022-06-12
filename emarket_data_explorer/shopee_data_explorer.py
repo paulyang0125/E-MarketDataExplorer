@@ -17,7 +17,7 @@ Todo:\n
 # shopee_data_explorer/shopee_data_explorer.py
 
 
-from pathlib import Path
+
 from typing import Any, Dict, List, NamedTuple, Tuple
 import logging
 import platform
@@ -67,17 +67,20 @@ class Explorer:
     crawlers and eda tools, and the CLI interface
 
     """
-    def __init__(self,data_path:Path,db_path:Path,ip_addresses: List[str], proxy_auth: str,\
-        header: Dict[str, any], webdriver_path:str, data_source:int) -> None:
+    # def __init__(self,data_path:Path,db_path:Path,ip_addresses: List[str], proxy_auth: str,\
+    #     my_header: Dict[str, any], webdriver_path:str, data_source:int) -> None:
+    def __init__(self,**kwargs) -> None:
         # debug
         #print("1. header type: " + str(type(header)))
         #print("1. header items: " + str(header.items))
-        self._crawler_handler = CrawlerHandler(ip_addresses,proxy_auth,header,webdriver_path)
-        self._data_processor = CrawlerDataProcesser(data_source)
-        self._db_handler = DatabaseHandler(data_path,db_path)
+
+        self._crawler_handler = CrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
+            kwargs['my_header'],kwargs['webdriver_path'])
+        self._data_processor = CrawlerDataProcesser(kwargs['data_source'])
+        self._db_handler = DatabaseHandler(kwargs['data_path'],kwargs['db_path'])
         self.a_page_product_index = []
-        self.data_path = data_path
-        self.data_source = data_source
+        self.data_path = kwargs['data_path']
+        self.data_source = kwargs['data_source']
 
 
     def read_index_selenium(self, keyword: str,page_num: int) -> ScrapingInfo:
@@ -236,8 +239,10 @@ class Explorer:
             'make_figure5', 'make_figure6']
             keyword = self._extract_keyword(product_csv_name)
             data_source = self._extract_source(product_csv_name)
-            shopee_eda_instance = ShopeeEDA(keyword,data_source,self.data_path,chart_groups,\
-                products_data,comments_data,my_font)
+            shopee_eda_instance = ShopeeEDA(keyword=keyword,data_source=data_source,\
+                data_path=self.data_path,chart_groups=chart_groups,\
+                product_data=products_data,comments_data=comments_data,my_font=my_font,\
+                chart_color=None)
             read = shopee_eda_instance.do_eda()
             #todo: define the data format of response here
             return (read.result,SUCCESS)

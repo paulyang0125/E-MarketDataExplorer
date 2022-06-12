@@ -11,7 +11,6 @@
 # tests/test_shopee_data_explorer.py
 
 #from ast import keyword
-import os
 from typer.testing import CliRunner
 import pytest
 from emarket_data_explorer import (
@@ -20,7 +19,7 @@ from emarket_data_explorer import (
     SUCCESS,
     ALL,
     PRODUCT_COMMENTS,
-    PRODUCT_ITEMS,
+    # PRODUCT_ITEMS,
     SHOPEE,
     DATA_SOURCES,
     cli,
@@ -32,6 +31,14 @@ from emarket_data_explorer import (
 
 runner = CliRunner()
 
+def get_explorer(data_source):
+    """test"""
+    return shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+         db_path=database.DEFAULT_DB_FILE_PATH,\
+        ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+         proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+              webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+                  data_source=data_source)
 
 def test_version():
     """ validate the --version output"""
@@ -42,7 +49,7 @@ def test_version():
 def test_init_over_cli() -> None:
     """test"""
     newline = "\n"
-    result = runner.invoke(cli.app, ["init"], input='\n'.join([newline,newline]))
+    result = runner.invoke(cli.app, ["init"], input='\n'.join([newline]))
     assert result.exit_code == 0
     print(result.output)
 
@@ -116,12 +123,13 @@ test_data2 = {
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_read_index_api(keyword, page_num, page_length, data_source,expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-         database.DEFAULT_DB_FILE_PATH,\
-        shopee_crawler.DEFAULT_IP_RANGES,\
-         shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-              shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                  data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     print("==expected: " + str(expected))
     actual = explorer.read_index_api(keyword, page_num, page_length)
     print("==actual: ", str(actual))
@@ -144,12 +152,13 @@ def test_read_index_api(keyword, page_num, page_length, data_source,expected):
 @pytest.mark.skip(reason="since this test takes long time, skip first until v1.3 starts")
 def test_read_index_selenium(keyword, page_num, data_source, expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-        shopee_crawler.DEFAULT_IP_RANGES, \
-        shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-             shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                 data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     print("==expected: " + str(expected))
     actual = explorer.read_index_selenium(keyword, page_num)
     print("==actual: ", str(actual))
@@ -172,13 +181,13 @@ def test_read_index_selenium(keyword, page_num, data_source, expected):
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_read_index(keyword, page_num, page_length, data_source, expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-        shopee_crawler.DEFAULT_IP_RANGES,\
-         shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-              shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                  data_source)
-
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     actual = explorer.read_index(keyword,page_num,page_length)
     assert actual.error == 0
     assert len(actual.scraping_info) == expected
@@ -215,12 +224,13 @@ test_data4 = {
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_read_good_details(shop_id, item_id, data_source, expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-        shopee_crawler.DEFAULT_IP_RANGES,\
-         shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-              shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                  data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     actual = explorer.read_good_details(shop_id=shop_id, item_id=item_id)
     #print("test_read_good_details: autual - " , str(actual))
     assert actual.error == 0
@@ -250,11 +260,13 @@ def test_read_good_details(shop_id, item_id, data_source, expected):
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_read_good_comments(shop_id, item_id, data_source,expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-        shopee_crawler.DEFAULT_IP_RANGES,\
-         shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-              shopee_crawler.DEFAULT_CHROME_WEBDRIVER,data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     actual = explorer.read_good_comments(shop_id=shop_id, item_id=item_id)
 
     #print("test_read_good_comments: actual - " , str(actual))
@@ -273,22 +285,22 @@ def test_read_good_comments(shop_id, item_id, data_source,expected):
             SHOPEE,
             20,
         ),
-        pytest.param(
-            test_data2["keyword"],
-            20,
-            PRODUCT_ITEMS,
-            10,
-            SHOPEE,
-            20,
-        ),
-        pytest.param(
-            test_data2["keyword"],
-            10,
-            PRODUCT_COMMENTS,
-            10,
-            SHOPEE,
-            10,
-        ),
+        # pytest.param(
+        #     test_data2["keyword"],
+        #     20,
+        #     PRODUCT_ITEMS,
+        #     10,
+        #     SHOPEE,
+        #     20,
+        # ),
+        # pytest.param(
+        #     test_data2["keyword"],
+        #     10,
+        #     PRODUCT_COMMENTS,
+        #     10,
+        #     SHOPEE,
+        #     10,
+        # ),
 
     ]
 )
@@ -299,12 +311,13 @@ def test_read_good_comments(shop_id, item_id, data_source,expected):
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap(keyword, num_of_product, mode,page_length, data_source, expected):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-    shopee_crawler.DEFAULT_IP_RANGES,\
-        shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-            shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     actual = explorer.scrap(keyword=keyword, num_of_product=num_of_product,mode=mode,\
         page_length=page_length)
     assert actual.error == 0
@@ -316,7 +329,7 @@ def test_scrap(keyword, num_of_product, mode,page_length, data_source, expected)
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_over_cli():
     """ validate the scrap cli output"""
-    result = runner.invoke(cli.app, ["scrap","運動內衣","50","50"])
+    result = runner.invoke(cli.app, ["scrap","運動內衣","30","30"])
     assert result.exit_code == 0
     print(result.stdout)
     assert "運動內衣" and "50" in result.stdout
@@ -343,12 +356,13 @@ def test_scrap_over_cli():
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_do_eda(product_csv_name,product_comment_name, data_source):
     """test"""
-    explorer = shopee_data_explorer.Explorer(shopee_crawler.DEFAULT_DATA_PATH, \
-        database.DEFAULT_DB_FILE_PATH,\
-    shopee_crawler.DEFAULT_IP_RANGES,\
-        shopee_crawler.DEFAULT_PROXY_AUTH,shopee_crawler.DEFAULT_HEADER,\
-            shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
-                data_source)
+    # explorer = shopee_data_explorer.Explorer(data_path=shopee_crawler.DEFAULT_DATA_PATH, \
+    #      db_path=database.DEFAULT_DB_FILE_PATH,\
+    #     ip_addresses=shopee_crawler.DEFAULT_IP_RANGES,\
+    #      proxy_auth=shopee_crawler.DEFAULT_PROXY_AUTH,my_header=shopee_crawler.DEFAULT_HEADER,\
+    #           webdriver_path=shopee_crawler.DEFAULT_CHROME_WEBDRIVER,\
+    #               data_source=data_source)
+    explorer = get_explorer(data_source)
     result, error = explorer.do_eda(product_csv_name,product_comment_name)
     assert error == 0
     print("result: ", result)
@@ -406,7 +420,8 @@ def test_eda_over_cli(product_csv_name,product_comment_name,data_source):
 @pytest.mark.skip(reason="tested, skip first to save time")
 def test_read_search_over_cli(keyword,page_num,page_length) -> None:
     "test"
-    result = runner.invoke(cli.app, ["read-search",keyword,page_num,page_length, '--searcher_type',1])
+    result = runner.invoke(cli.app, ["read-search",keyword,page_num,page_length,\
+         '--searcher_type',1])
     print(result.exit_code)
     print(type(result.exit_code))
     #assert result.exit_code == 0
