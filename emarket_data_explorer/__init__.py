@@ -38,7 +38,8 @@ __version__ = "1.1.0"
     ALL,
     PRODUCT_ITEMS,
     PRODUCT_COMMENTS,
-) = range(4)
+    PRODUCT_INDEXES,
+) = range(5)
 
 #source enumeration
 (
@@ -51,9 +52,10 @@ __version__ = "1.1.0"
 #mode definition
 
 MODES = {
-    ALL: "product_goods:product_comments",
+    ALL: "product_goods:product_comments:product_index",
     PRODUCT_ITEMS: "product_goods",
-    PRODUCT_COMMENTS: "product_comments"
+    PRODUCT_COMMENTS: "product_comments",
+    PRODUCT_INDEXES:"product_indexes",
 }
 
 #data_source definition

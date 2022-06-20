@@ -17,9 +17,11 @@ Todo:\n
 # shopee_data_explorer/shopee_data_explorer.py
 
 
-
+from abc import ABC
+import asyncio
 from typing import Any, Dict, List, NamedTuple, Tuple
 import logging
+import time
 import platform
 import pandas as pd
 from matplotlib.font_manager import FontProperties
@@ -32,6 +34,7 @@ from emarket_data_explorer.database import DatabaseHandler
 from emarket_data_explorer.shopee_crawler import CrawlerHandler
 from emarket_data_explorer.data_process import CrawlerDataProcesser
 from emarket_data_explorer.shopee_eda import ShopeeEDA
+from emarket_data_explorer.shopee_async_crawler import ShopeeAsyncCrawlerHandler
 
 
 mylogger = logging.getLogger(__name__)
@@ -46,6 +49,82 @@ mylogger.addHandler(ch)
 mylogger.addHandler(fh)
 
 
+##workflow
+
+class WorkFlow(ABC):
+    """the abstract class of workflow"""
+    #pass
+
+class ShopeeAsyncWorkFlow(WorkFlow):
+    """ the implementation of workflow for shopee async io"""
+
+    def do_workflow_all(self,**kwargs):
+    #def do_workflow_all(self,keyword,num_of_product,\
+    # page_length,data_source,ip_addresses,proxy_auth,header):
+        """ workflow for all """
+
+        #kwargs['ip_addresses']
+
+        start_time = time.time()
+        #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
+        #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
+        result = asyncio.run(kwargs['handler'].process_all(kwargs['keyword'], \
+            kwargs['num_of_product'],kwargs['page_length'], kwargs['data_source'],
+            kwargs['mode']),debug=True)
+        #asyncio.run(shopee_handler.process_all(keyword, num_of_product,\
+        # page_length, data_source),debug=True)
+
+        duration = time.time() - start_time
+        print(f"Duration {duration} seconds")
+
+        return result
+
+
+    def do_workflow_product_info(self,**kwargs):
+        """ workflow for product info """
+        start_time = time.time()
+        #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
+        #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
+        result = asyncio.run(kwargs['handler'].process_product(kwargs['keyword'],\
+            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+                kwargs['mode']),debug=True)
+        duration = time.time() - start_time
+        print(f"Duration {duration} seconds")
+
+        return result
+
+    def do_workflow_product_comment(self,**kwargs):
+        """ workflow for comment """
+        start_time = time.time()
+        #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
+        #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
+        result = asyncio.run(kwargs['handler'].process_comment(kwargs['keyword'],\
+            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+                kwargs['mode']),debug=True)
+        duration = time.time() - start_time
+        print(f"Duration {duration} seconds")
+
+        return result
+
+    def do_workflow_product_index(self,**kwargs):
+        """ workflow for the index """
+        start_time = time.time()
+        #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
+        #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
+        result = asyncio.run(kwargs['handler'].process_index(kwargs['keyword'],\
+            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+                kwargs['mode']),debug=True)
+        #shopee_handler = ShopeeAsycCrawlerHandler(ip_addresses=ip_addresses,\
+        # proxy_auth=proxy_auth,header=header)
+        #merged_search_index_df, ids_pool, status = asyncio.run(shopee_handler.\
+
+        duration = time.time() - start_time
+        print(f"Duration {duration} seconds")
+        return result
+
+
+
+###dataclass
 class ScrapingInfo(NamedTuple):
     """ data model to CLI"""
     scraping_info: Dict[str, Any]
@@ -76,6 +155,8 @@ class Explorer:
 
         self._crawler_handler = CrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
             kwargs['my_header'],kwargs['webdriver_path'])
+        self._async_crawler_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
+            proxy_auth=kwargs['proxy_auth'],header=kwargs['my_header'],)
         self._data_processor = CrawlerDataProcesser(kwargs['data_source'])
         self._db_handler = DatabaseHandler(kwargs['data_path'],kwargs['db_path'])
         self.a_page_product_index = []
@@ -388,3 +469,34 @@ class Explorer:
             else:
                 print("containers are empty")
                 return ScrapingInfo(scraper_init, read.error)
+
+    def scrap_async(self, keyword: str, num_of_product: int, mode:int,\
+        page_length:int) -> ScrapingInfo:
+        """ async version of scraping"""
+
+        workflower = ShopeeAsyncWorkFlow()
+        #scrap_params = {}
+        #scrap_params['keyword'] = keyword
+        #scrap_params['num_of_product'] = num_of_product
+
+        if mode == emarket_data_explorer.ALL:
+            workflower.do_workflow_all(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode)
+
+        if mode == emarket_data_explorer.PRODUCT_ITEMS:
+            workflower.do_workflow_product_info(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode)
+
+        if mode == emarket_data_explorer.PRODUCT_COMMENTS:
+            workflower.do_workflow_product_comment(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode)
+
+        if mode == emarket_data_explorer.PRODUCT_INDEXES:
+            workflower.do_workflow_product_index(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode)
+
+        return SUCCESS

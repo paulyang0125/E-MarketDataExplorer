@@ -265,6 +265,9 @@ class ShopeeEDA():
             for tag in tags:
                 # if not repeate, add the new tag to the four lists
                 if tag not in tags_list and tag:
+                    # debug, not decided to add yet
+                    tag = tag.replace('^n',"")
+
                     tags_list.append(tag)
                     count_list.append(1)
                     like_list.append(likes)
@@ -318,6 +321,10 @@ class ShopeeEDA():
                 and sale > self.tag_data['sales'].mean()+self.tag_data['sales'].std()*1:
                 #plt.text(like, sale, tag, fontsize=12,) # annotate the tag name on the last day
                 #if not like in likes or not sale in sales:
+
+                # debug, not decided to add yet
+                tag = tag.replace('^n',"")
+
                 tags.append(tag)
                 likes.append(like)
                 sales.append(sale)
