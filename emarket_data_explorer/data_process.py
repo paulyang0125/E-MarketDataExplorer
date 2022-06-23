@@ -20,7 +20,9 @@ Todo:\n
 
 import logging
 from typing import Any, Dict, List
+import json
 import pandas as pd
+from bs4 import BeautifulSoup
 
 
 
@@ -151,8 +153,8 @@ class CrawlerDataProcesser:
         product_comments_container = pd.concat([product_comments_container, user_comment], \
             axis= 0)
         # debug
-        #print("process_comment_data->comment_container:head", product_comments_container.head(5))
-        #print("process_comment_data->comment_container:tail", product_comments_container.tail(5))
+        #mylogger.debug("process_comment_data->comment_container:head", product_comments_container.head(5))
+        #mylogger.debug("process_comment_data->comment_container:tail", product_comments_container.tail(5))
 
         return product_comments_container
 
@@ -179,8 +181,10 @@ class CrawlerDataProcesser:
         product_items_container = pd.concat([product_items_container,product_items],\
             axis=0)
         # debug
-        #print("aggregate_product_data->container:head", product_items_container.head(5))
-        #print("aggregate_product_data->container:tail", product_items_container.tail(5))
+        mylogger.debug("aggregate_product_data->container:head: %s",\
+             str(product_items_container.head(5)))
+        mylogger.debug("aggregate_product_data->container:tail: %s",\
+             str(product_items_container.tail(5)))
 
         return product_items_container
 
@@ -199,3 +203,147 @@ class CrawlerDataProcesser:
             product_items[count] = result[count]['item_basic']
         product_items=pd.DataFrame(product_items).T
         return product_items
+
+
+class ShopeeAsyncCrawlerDataProcesser:
+    """test"""
+
+    def __init__(self, data_source:str) -> None:
+        self.data_source = data_source
+        #self.product_items = []
+        self.product_articles = []
+        self.product_sku = []
+        self.product_tags = []
+        #self.product_items_container = pd.DataFrame()
+        self.product_comments_container = pd.DataFrame()
+
+    def parse_search_indexs(self,text):
+        """ test """
+        soup = BeautifulSoup(text, "lxml")
+        getjson=json.loads(soup.text)
+        mylogger.debug("parse_search_indexs succeeds")
+        return getjson['items']
+
+    def parse_good_info(self,text):
+        """ test """
+        processed_goods = text.replace("\\n","^n")
+        processed_goods = processed_goods.replace("\\t","^t")
+        processed_goods = processed_goods.replace("\\r","^r")
+        goods_json = json.loads(processed_goods)
+        mylogger.debug("parse_good_info succeeds")
+        return goods_json
+
+    def parse_good_comments(self,text):
+        """ test """
+        processed_comments_results= text.replace("\\n","^n")
+        processed_comments_results=processed_comments_results.replace("\\t","^t")
+        processed_comments_results=processed_comments_results.replace("\\r","^r")
+        comments_json = json.loads(processed_comments_results)
+        mylogger.debug("read_good_comments succeeds")
+        return comments_json['comments']
+
+
+    def process_raw_search_index(self, result:list) -> pd.DataFrame:
+        """ test """
+        product_items = {}
+        #try:
+        if not isinstance(result, NameError) and result:
+            mylogger.debug("type: %s" , str(type(result)))
+            for count, _ in enumerate(result):
+                product_items[count] = result[count]['item_basic']
+
+        #except NameError as ne:
+        #    print('parsing exception:', str(ne))
+
+        product_items=pd.DataFrame(product_items).T
+
+        return product_items
+
+    def clean_product_data(self):
+        """ test """
+        self.product_articles= []
+        self.product_sku= []
+        self.product_tags = []
+
+    def extract_product_data(self, product:dict) -> None:
+        """ test """
+        try:
+            if product['item']:
+                if product['item']['description']:
+                    self.product_articles.append(product['item']['description']\
+                                                 .replace('\n', ' ').replace('\r', ''))
+                else:
+                    self.product_articles.append('na')
+                if product['item']['models']:
+                    # bug, to remove /n and /r from list of dict of value
+                    #i for i in product['item']['models']
+                    self.product_sku.append(product['item']['models'])
+                    #self.product_sku.append(product['item']['models']\
+                    #                        .replace('\n', ' ').replace('\r', ''))
+                else:
+                    self.product_sku.append('na')
+                if product['item']['hashtag_list']:
+                    self.product_tags.append(product['item']['hashtag_list'])
+                    #self.product_tags.append(product['item']['hashtag_list']\
+                    #                         .replace('\n', ' ').replace('\r', ''))
+                else:
+                    self.product_sku.append('na')
+
+
+        except KeyError as error:
+            mylogger.warning('I got a KeyError - reason "%s"' % str(error))
+            self.product_articles.append('na')
+            self.product_sku.append('na')
+            self.product_tags.append('na')
+        except TypeError as error:
+            mylogger.warning('I got a TypeError - reason "%s"' % str(error))
+            self.product_articles.append('na')
+            self.product_sku.append('na')
+            self.product_tags.append('na')
+
+
+    def aggregate_product_data(self, product_items_container: pd.DataFrame, \
+        product_items: pd.DataFrame) -> pd.DataFrame:
+        """ test """
+
+        #for debug
+        #global debug_list_1
+        #global debug_list_2
+        #debug_list_1 = self.product_sku
+        #debug_list_2 = self.product_tags
+
+        product_items['articles'] = pd.Series(self.product_articles)
+        product_items['SKU'] = pd.Series(self.product_sku)
+        product_items['hashtag_list'] = pd.Series(self.product_tags)
+        product_items_container = pd.concat([product_items_container,product_items],\
+            axis=0)
+        return product_items_container
+
+    def update_comment_data(self, comment) -> pd.DataFrame:
+        """ test """
+        #mydebug_list.append(comment)
+        if not comment:
+            user_comment = pd.DataFrame()
+        else:
+            user_comment = pd.DataFrame(comment) #covert comment to data frame
+        #mydebug_list.append(user_comment)
+
+        if not user_comment.empty:
+            models=[]
+            for item in user_comment['product_items']:
+                if pd.DataFrame(item).filter(regex = 'model_name').shape[1] != 0:
+                    models.append(pd.DataFrame(item)['model_name'].tolist())
+                else:
+                    mylogger.warning('No model_name')
+                    models.append(None)
+
+            user_comment['product_items']= models # puts models aka SKUs in
+
+        self.product_comments_container = pd.concat([self.product_comments_container,\
+             user_comment],axis= 0)
+        #mydebug_list.append(self.product_comments_container)
+        # debug
+        #mylogger.debug("process_comment_data->comment_container:head", product_comments_container.head(5))
+        #mylogger.debug("process_comment_data->comment_container:tail", product_comments_container.tail(5))
+
+        return self.product_comments_container

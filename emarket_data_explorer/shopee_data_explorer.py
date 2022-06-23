@@ -27,7 +27,7 @@ import pandas as pd
 from matplotlib.font_manager import FontProperties
 from tqdm import tqdm
 from emarket_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
-    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR
+    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR, EMPTY_SCRAP_ERROR
 import emarket_data_explorer
 from emarket_data_explorer import shopee_eda
 from emarket_data_explorer.database import DatabaseHandler
@@ -35,6 +35,8 @@ from emarket_data_explorer.shopee_crawler import CrawlerHandler
 from emarket_data_explorer.data_process import CrawlerDataProcesser
 from emarket_data_explorer.shopee_eda import ShopeeEDA
 from emarket_data_explorer.shopee_async_crawler import ShopeeAsyncCrawlerHandler
+from emarket_data_explorer.data_process import ShopeeAsyncCrawlerDataProcesser
+from emarket_data_explorer.database import ShopeeAsyncDatabaseHandler
 
 
 mylogger = logging.getLogger(__name__)
@@ -68,16 +70,48 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
         #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
-        result = asyncio.run(kwargs['handler'].process_all(kwargs['keyword'], \
-            kwargs['num_of_product'],kwargs['page_length'], kwargs['data_source'],
-            kwargs['mode']),debug=True)
+        # result = asyncio.run(kwargs['handler'].process_all(kwargs['keyword'], \
+        #     kwargs['num_of_product'],kwargs['page_length'], kwargs['data_source'],
+        #     kwargs['mode'], kwargs['data_processor'],kwargs['database']),debug=True)
+
+        result = asyncio.run(kwargs['handler'].process_all(kwargs),debug=True)
+
+
+
         #asyncio.run(shopee_handler.process_all(keyword, num_of_product,\
         # page_length, data_source),debug=True)
 
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
-        return result
+        scraper_response = {
+            "ids_pool":result[0],
+            "obtained_index_num":len(result[1].index),
+            "obtained_good_num":len(result[2].index),
+            "obtained_comment_num":len(result[3].index),
+        }
+
+        return (scraper_response, result[4])
+
+        #return result
+
+        # return (ids_pool,merged_search_index_df,product_comments_container,\
+        #     product_comments_container,[status_index,status_product,status_comment])
+
+        # if not product_items_container.empty and not product_comments_container.empty:
+        # scraper_response = {
+        # "keyword":keyword,
+        # "page_num": page_num,
+        # "page_length":page_length,
+        # "obtained_product_num":len(product_items_container.index),
+        # "obtained_comment_num":len(product_comments_container.index),
+        # }
+
+        # return ScrapingInfo(scraper_response, read.error)
+
+
+
+
 
 
     def do_workflow_product_info(self,**kwargs):
@@ -85,42 +119,74 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
         #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
-        result = asyncio.run(kwargs['handler'].process_product(kwargs['keyword'],\
-            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
-                kwargs['mode']),debug=True)
+        # result = asyncio.run(kwargs['handler'].process_product(kwargs['keyword'],\
+        #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+        #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
+        result = asyncio.run(kwargs['handler'].process_product(kwargs),debug=True)
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
-        return result
+        scraper_response = {
+            "ids_pool":result[0],
+            "obtained_index_num":len(result[1].index),
+            "obtained_good_num":len(result[2].index),
+
+        }
+        return (scraper_response, result[3])
 
     def do_workflow_product_comment(self,**kwargs):
         """ workflow for comment """
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
         #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
-        result = asyncio.run(kwargs['handler'].process_comment(kwargs['keyword'],\
-            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
-                kwargs['mode']),debug=True)
+        # result = asyncio.run(kwargs['handler'].process_comment(kwargs['keyword'],\
+        #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+        #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
+
+        result = asyncio.run(kwargs['handler'].process_comment(kwargs),debug=True)
+
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
-        return result
+        scraper_response = {
+            "ids_pool":result[0],
+            "obtained_index_num":len(result[1].index),
+            "obtained_comment_num":len(result[2].index),
+        }
+
+        return (scraper_response, result[3])
+
+
+        #return result
 
     def do_workflow_product_index(self,**kwargs):
         """ workflow for the index """
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
         #    proxy_auth=kwargs['proxy_auth'],header=kwargs['header'])
-        result = asyncio.run(kwargs['handler'].process_index(kwargs['keyword'],\
-            kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
-                kwargs['mode']),debug=True)
+
+        # result = asyncio.run(kwargs['handler'].process_index(kwargs['keyword'],\
+        #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
+        #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
+
+        result = asyncio.run(kwargs['handler'].process_index(kwargs),debug=True)
+
+
         #shopee_handler = ShopeeAsycCrawlerHandler(ip_addresses=ip_addresses,\
         # proxy_auth=proxy_auth,header=header)
         #merged_search_index_df, ids_pool, status = asyncio.run(shopee_handler.\
 
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
-        return result
+
+        scraper_response = {
+            "ids_pool":result[0],
+            "obtained_index_num":len(result[1].index),
+        }
+
+        return (scraper_response, result[2])
+
+        #return result
 
 
 
@@ -155,10 +221,19 @@ class Explorer:
 
         self._crawler_handler = CrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
             kwargs['my_header'],kwargs['webdriver_path'])
-        self._async_crawler_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
-            proxy_auth=kwargs['proxy_auth'],header=kwargs['my_header'],)
+
         self._data_processor = CrawlerDataProcesser(kwargs['data_source'])
         self._db_handler = DatabaseHandler(kwargs['data_path'],kwargs['db_path'])
+
+        self._shopee_async_data_processor = ShopeeAsyncCrawlerDataProcesser(kwargs['data_source'])
+        self._shopee_async_db_handler = ShopeeAsyncDatabaseHandler(kwargs['data_path']\
+            ,kwargs['db_path'])
+
+        self._async_crawler_handler = ShopeeAsyncCrawlerHandler(ip_addresses=\
+            kwargs['ip_addresses'],proxy_auth=kwargs['proxy_auth'],header=kwargs['my_header'],\
+                data_handler = self._shopee_async_data_processor)
+
+
         self.a_page_product_index = []
         self.data_path = kwargs['data_path']
         self.data_source = kwargs['data_source']
@@ -334,7 +409,7 @@ class Explorer:
 
 
     def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
-        ) -> ScrapingInfo:
+            ) -> ScrapingInfo:
         """the main entry of scrap command that scraps data source with the specified
            number of the result based on mode suer select.\n
 
@@ -480,23 +555,55 @@ class Explorer:
         #scrap_params['num_of_product'] = num_of_product
 
         if mode == emarket_data_explorer.ALL:
-            workflower.do_workflow_all(handler=self._async_crawler_handler,\
+            result = workflower.do_workflow_all(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
-                page_length=page_length,data_source=self.data_source,mode=mode)
+                page_length=page_length,data_source=self.\
+                    data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler)
+                    #kwargs['data_processor'],kwargs['database']
+                    #return (ids_pool,[status_index,status_product,status_comment])
 
         if mode == emarket_data_explorer.PRODUCT_ITEMS:
-            workflower.do_workflow_product_info(handler=self._async_crawler_handler,\
+            result = workflower.do_workflow_product_info(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
-                page_length=page_length,data_source=self.data_source,mode=mode)
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index,status_product])
 
         if mode == emarket_data_explorer.PRODUCT_COMMENTS:
-            workflower.do_workflow_product_comment(handler=self._async_crawler_handler,\
+            result = workflower.do_workflow_product_comment(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
-                page_length=page_length,data_source=self.data_source,mode=mode)
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index,status_comment])
 
         if mode == emarket_data_explorer.PRODUCT_INDEXES:
-            workflower.do_workflow_product_index(handler=self._async_crawler_handler,\
+            result = workflower.do_workflow_product_index(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
-                page_length=page_length,data_source=self.data_source,mode=mode)
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index])
 
-        return SUCCESS
+        #todo: this is not tested yet and also not implemented
+        if not result:
+            return EMPTY_SCRAP_ERROR
+
+        return result # in scrap, it returns ScrapingInfo(scraper_response, read.error)
+
+
+        # scraper_response = {
+        #     "keyword":keyword,
+        #     "page_num": page_num,
+        #     "page_length":page_length,
+        #     "obtained_product_num":len(product_items_container.index),
+        #     "obtained_comment_num":len(product_comments_container.index),
+        #     }
+
+        # or
+        #scraper_response = {
+        #    "keyword":keyword,
+        #    "page_num": page_num,
+        #    "page_length":page_length,
+        #    "obtained_comment_num":len(product_comments_container.index),
+        #    }

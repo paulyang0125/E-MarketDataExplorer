@@ -17,14 +17,16 @@ Todo at v1.3:\n
 """
 
 # emarket_data_explorer/cli.py
+
 import logging
 import sys
 from pathlib import Path
 from typing import Dict, List
 from typing import Optional
+
 import typer
 from emarket_data_explorer import (
-    ERRORS, __app_name__, __version__, database, config, shopee_crawler, shopee_data_explorer
+    SUCCESS, ERRORS, __app_name__, __version__, database, config, shopee_crawler, shopee_data_explorer
 )
 
 app = typer.Typer()
@@ -388,9 +390,10 @@ error message if something bad happens."
                 raise typer.Exit(error)
             else:
                 typer.secho(
-                    f"""explorer: "{response['keyword']}" was searched and collected successfully"""
-                    f"""with options: page_num {response['page_num']} and page_length \
-                    {response['page_length']} """,
+                    f"""explorer: "{response['keyword']}" was searched"""
+                    f"""and collected successfully\n"""
+                    f"""with options: page_num {response['page_num']} and  """
+                    f"""page_length {response['page_length']}\n""",
                     fg=typer.colors.GREEN,
                 )
     else:
@@ -399,6 +402,148 @@ error message if something bad happens."
              fg=typer.colors.RED,
         )
         raise typer.Exit(10)
+
+
+
+@app.command()
+#input arg -> keyword: str, num of product: int, page_length: int (optional),
+#DEFAULT_PAGE_LENGTH = 10
+def scrap_async(
+    required_args :List[str] = typer.Argument(
+        ...,
+        help=
+        """
+        Here expects three inputs in sequence\n
+        1. keyword you want to search for\n
+        2. the number of product\n
+        3. the length of page (optional)\n
+        For example, e-market-data explorer scrap basketball 100
+        """,
+        ),
+    #source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
+    mode: int = typer.Option(
+        1, "--scrap_mode_for_shopee", "-sm", min=1, max=4,
+        help="we have three modes ALL, PRODUCT_ITEMS, PRODUCT_COMMENTS available. user can \
+choose to scrap all two data (product or comment or index) or three for ALL. the default is 1 for ALL."
+        ),
+    retry: int = typer.Option(
+        1, "--retry", "-r", min=1, max=5,
+        help="this is not yet supported, we'll target v1.3 to implement."
+        ),
+    verbose_level: int = typer.Option(
+        3, "--verbose", "-ve", min=1, max=3,
+        help="verbose 1 dumps all detailed debugging info, the default 3 just print \
+error message if something bad happens."
+        )
+) -> None:
+    """
+    Scrap commercial data from the data source specified by user
+
+    """
+    if verbose_level == 1:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+
+    elif verbose_level == 2:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+
+    elif verbose_level == 3:
+        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
+            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.FATAL)
+
+
+    mylogger = logging.getLogger(__name__)
+
+
+    # debug
+    #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, searcher-type - \
+    #    {searcher_type}, retry - {retry}')
+
+    mylogger.debug('inputs are args - %s, mode - %i,\
+         retry - %i, verbose - %i', required_args, mode,\
+            retry, verbose_level)
+
+    if len(required_args) < 2:
+        typer.secho(
+        f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
+    )
+        raise typer.Exit(1)
+    else:
+        keyword = required_args[0]
+        num_of_product = int(required_args[1])
+        try:
+            if required_args[2]:
+                page_length = int(required_args[2])
+        except IndexError:
+            page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
+            typer.secho(f'page_length is not given, the app will use default\
+                    length:{shopee_crawler.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
+
+        typer.secho(
+                f"""scrap for {keyword} is starting!""",
+                fg=typer.colors.GREEN,
+            )
+
+        explorer = get_explorer()
+        result = explorer.scrap_async(keyword,num_of_product,mode,page_length)
+
+
+        #if mode == 1:
+        if not SUCCESS in result[1]:
+            typer.secho(
+            #     f'failed with "{ERRORS[error]}"', fg=typer.colors.RED
+            # )
+            # raise typer.Exit(error)
+                f'failed with "{str(result[1])}"', fg=typer.colors.RED
+            )
+            #raise typer.Exit(error)
+            #todo: to standardlize the typer.exit code
+            raise typer.Exit(15)
+        else:
+            if mode == 1:
+                typer.secho(
+                    f"""explorer: "{keyword}" was searched and collected successfully\n"""
+                    f"""with options: page_num {num_of_product} and page_length {page_length} \n"""
+                    f"""obtained_index_num: {result[0]["obtained_index_num"]} \n"""
+                    f"""obtained_good_num: {result[0]["obtained_good_num"]} \n"""
+                    f"""obtained_comment_num: {result[0]["obtained_comment_num"]} \n""",
+                    fg=typer.colors.GREEN,
+                )
+            if mode == 2:
+                typer.secho(
+                    f"""explorer: "{keyword}" was searched and collected successfully\n"""
+                    f"""with options: page_num {num_of_product} and page_length {page_length} \n"""
+                    f"""obtained_index_num: {result[0]["obtained_index_num"]} \n"""
+                    f"""obtained_good_num: {result[0]["obtained_good_num"]} \n""",
+                    fg=typer.colors.GREEN,
+                )
+            if mode == 3:
+                typer.secho(
+                    f"""explorer: "{keyword}" was searched and collected successfully\n"""
+                    f"""with options: page_num {num_of_product} and page_length {page_length} \n"""
+                    f"""obtained_index_num: {result[0]["obtained_index_num"]} \n"""
+                    f"""obtained_comment_num: {result[0]["obtained_comment_num"]} \n""",
+                    fg=typer.colors.GREEN,
+                )
+            if mode == 4:
+                typer.secho(
+                    f"""explorer: "{keyword}" was searched and collected successfully\n"""
+                    f"""with options: page_num {num_of_product} and page_length {page_length} \n"""
+                    f"""obtained_index_num: {result[0]["obtained_index_num"]} \n """,
+                    fg=typer.colors.GREEN,
+                )
+
+
+
+            # scraper_response = {
+            #             "ids_pool":result[0],
+            #             "obtained_index_num":len(result[1].index),
+            #             "obtained_good_num":len(result[2].index),
+            #             "obtained_comment_num":len(result[3].index),
+            #         }
+
+
 
 
 @app.callback()

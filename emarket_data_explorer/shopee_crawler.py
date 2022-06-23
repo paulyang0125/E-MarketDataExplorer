@@ -74,7 +74,7 @@ mylogger.addHandler(fh)
 DEFAULT_KEYWORD = '女性皮夾'
 # PAGES stands for the number of pages you want to crawler, 1 page equals to 100 results
 DEFAULT_PAGE_NUM = 1
-DEFAULT_PAGE_LENGTH = 10
+DEFAULT_PAGE_LENGTH = 50
 DEFAULT_IP_RANGES = ['176.116.230.151:7237', '45.142.28.20:8031','45.140.13.112:9125',\
     '45.140.13.119:9132', '45.142.28.83:8094','45.140.13.124:9137']
 DEFAULT_PROXY_AUTH = "ffpswzty:kvenecq9i6tf"
