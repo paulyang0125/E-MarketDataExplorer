@@ -26,15 +26,16 @@ from typing import Optional
 
 import typer
 from emarket_data_explorer import (
-    SUCCESS, ERRORS, __app_name__, __version__, database, config, shopee_crawler, shopee_data_explorer
+    SUCCESS, ERRORS, __app_name__, __version__, config, database, constant, shopee_crawler, shopee_data_explorer
 )
+
 
 app = typer.Typer()
 #self, ip_addresses: List[str], proxy_auth: str, header: Dict[str, any],path:str
 @app.command()
 def init(
     data_path: str = typer.Option(
-        str(shopee_crawler.DEFAULT_DATA_PATH),
+        str(constant.DEFAULT_DATA_PATH),
         "--data-path",
         "-data",
         prompt="e-market data explorer data location?",
@@ -48,7 +49,7 @@ def init(
     #     help="where e-market data explorer will save the index database on your OS",
     # ),
     # ip_addresses: str = typer.Option(
-    #     str(shopee_crawler.DEFAULT_IP_RANGES),
+    #     str(constant.DEFAULT_IP_RANGES),
     #     "--ips-range",
     #     "-ips",
     #     prompt="e-market data explorer proxy ip ranges?",
@@ -56,21 +57,21 @@ def init(
     # ),
 
     # proxy_auth: str = typer.Option(
-    #     str(shopee_crawler.DEFAULT_PROXY_AUTH),
+    #     str(constant.DEFAULT_PROXY_AUTH),
     #     "--proxy-auth",
     #     "-proxy",
     #     prompt="e-market data explorer proxy credential?",
     #     help="e-market data explorer will access the proxy server based on this credential",
     # ),
     #my_header: str = typer.Option(
-    #    str(shopee_crawler.DEFAULT_HEADER),
+    #    str(constant.DEFAULT_HEADER),
     #    "--myheader",
     #    "-header",
     #    prompt="shopee explorer http/https header?",
     #),
 
     # webdriver_path: str = typer.Option(
-    #     str(shopee_crawler.DEFAULT_CHROME_WEBDRIVER),
+    #     str(constant.DEFAULT_CHROME_WEBDRIVER),
     #     "--webdriver-path",
     #     "-webdriver",
     #     prompt="e-market data explorer webdriver path?",
@@ -88,10 +89,10 @@ def init(
     Initialize the shopee explorer data folder.
     """
     db_path = str(database.DEFAULT_DB_FILE_PATH)
-    ip_addresses = str(shopee_crawler.DEFAULT_IP_RANGES)
-    proxy_auth = str(shopee_crawler.DEFAULT_PROXY_AUTH)
-    my_header = shopee_crawler.DEFAULT_HEADER #it's a dict
-    webdriver_path = shopee_crawler.DEFAULT_CHROME_WEBDRIVER
+    ip_addresses = str(constant.DEFAULT_IP_RANGES)
+    proxy_auth = str(constant.DEFAULT_PROXY_AUTH)
+    my_header = constant.DEFAULT_HEADER #it's a dict
+    webdriver_path = constant.DEFAULT_CHROME_WEBDRIVER
 
 
     app_init_error,config_file_path = config.init_app(data_path=data_path, \
@@ -119,7 +120,7 @@ def init(
     else:
         typer.secho(f"The shopee explorer data is {data_path}", fg=typer.colors.GREEN)
 
-def get_explorer() -> shopee_data_explorer.Explorer:
+def get_explorer() -> shopee_data_explorer.ShopeeExplorer:
     """reads data in configs and passes them as args to initialize
     shopee_data_explorer.Explorer class
 
@@ -135,7 +136,7 @@ def get_explorer() -> shopee_data_explorer.Explorer:
     #def __init__(self,data_path:Path,ip_addresses: List[str], proxy_auth: str, \
     #header: Dict[str, any], webdriver_path:str) -> None:
     if config.CONFIG_FILE_PATH.exists():
-        #data_path = shopee_crawler.get_data_path(config.CONFIG_FILE_PATH)
+        #data_path = constant.get_data_path(config.CONFIG_FILE_PATH)
         data_path,ip_addresses,proxy_auth,webdriver_path,data_source,db_path,my_header = \
             shopee_crawler.get_configs_data(config.CONFIG_FILE_PATH)
 
@@ -148,7 +149,7 @@ def get_explorer() -> shopee_data_explorer.Explorer:
 
     if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
         and webdriver_path and isinstance(my_header,Dict) and data_source:
-        return shopee_data_explorer.Explorer(data_path=data_path,db_path=db_path,\
+        return shopee_data_explorer.ShopeeExplorer(data_path=data_path,db_path=db_path,\
             ip_addresses=ip_addresses,proxy_auth=proxy_auth,my_header=my_header, \
                 webdriver_path=webdriver_path, data_source=int(data_source))
     else:
@@ -368,13 +369,15 @@ error message if something bad happens."
         else:
             keyword = required_args[0]
             num_of_product = int(required_args[1])
+            #todo: if num_of_product < 10, or default one (now is 10) need to fill the minimum to at least default
+            #if num_of_product
             try:
                 if required_args[2]:
                     page_length = int(required_args[2])
             except IndexError:
-                page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
+                page_length = constant.DEFAULT_PAGE_LENGTH
                 typer.secho(f'page_length is not given, the app will use default\
-                     length:{shopee_crawler.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
+                     length:{constant.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
 
             typer.secho(
                     f"""scrap for {keyword} is starting!""",
@@ -476,9 +479,9 @@ error message if something bad happens."
             if required_args[2]:
                 page_length = int(required_args[2])
         except IndexError:
-            page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
+            page_length = constant.DEFAULT_PAGE_LENGTH_ASYNC
             typer.secho(f'page_length is not given, the app will use default\
-                    length:{shopee_crawler.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
+                    length:{constant.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
 
         typer.secho(
                 f"""scrap for {keyword} is starting!""",

@@ -9,12 +9,14 @@
 """This module provides the Shopee Async Crawler functionality.
 
 Todo:\n
-1. xxxxxx\n
+1. tqdm is not working well for async version \n
+2. errors are not used well in async version \n
+3. need to define the datatype for this \n
 
 
 
 """
-# shopee_data_explorer/shopee_crawler.py
+# shopee_data_explorer/shopee_async_crawler.py
 
 
 from abc import ABC, abstractmethod
@@ -30,8 +32,10 @@ nest_asyncio.apply()
 import pandas as pd
 from tqdm import tqdm
 #from async_retrying import retry
+from emarket_data_explorer.classtype import CrawlerHandler
 from emarket_data_explorer import (SUCCESS,MODES)
 import emarket_data_explorer
+
 
 
 ### logger
@@ -53,31 +57,31 @@ mylogger.addHandler(ch)
 mylogger.addHandler(fh)
 
 
-class CrawlerHandler(ABC):
-    """ test """
+# class CrawlerHandler(ABC):
+#     """ test """
 
-    def __init__(self, ip_addresses,proxy_auth):
+#     def __init__(self, ip_addresses,proxy_auth):
 
-        self.ip_addresses = ip_addresses
-        self.proxy_auth = proxy_auth
+#         self.ip_addresses = ip_addresses
+#         self.proxy_auth = proxy_auth
 
-    @abstractmethod
-    def fetch(self,session, url, parsing_func):
-        """ test """
-        #pass
+#     @abstractmethod
+#     def fetch(self,session, url, parsing_func):
+#         """ test """
+#         #pass
 
-    @abstractmethod
-    def rotate_ip(self):
-        """
-        This abstract method should return a list
-        :rtype: list
-        """
-        #pass
+#     @abstractmethod
+#     def rotate_ip(self):
+#         """
+#         This abstract method should return a list
+#         :rtype: list
+#         """
+#         #pass
 
-    @abstractmethod
-    async def download_all_sites(self,sites,parse_func):
-        """ test """
-        #pass
+#     @abstractmethod
+#     async def download_all_sites(self,sites,parse_func):
+#         """ test """
+#         #pass
 
 
 class ShopeeAsyncCrawlerHandler(CrawlerHandler):
@@ -103,9 +107,9 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
         self.data_path = os.chdir(os.getcwd()) #will remove
 
-    async def fetch(self, session, url, parsing_func):
+    async def _fetch(self, session, url, parsing_func):
         """ test """
-        aio_proxies = self.rotate_ip()
+        aio_proxies = self._rotate_ip()
         timeout = aiohttp.ClientTimeout(total=25)
         mylogger.debug("start fetching")
         tries = 0
@@ -128,18 +132,18 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                     else:
                         mylogger.warning("response.status: {response.status}")
                         tries += 1
-                        aio_proxies = self.rotate_ip()
+                        aio_proxies = self._rotate_ip()
 
             except Exception as error:
                 mylogger.warning('My Connection Error %s', str(error))
                 if tries < 3:
-                    aio_proxies = self.rotate_ip()
+                    aio_proxies = self._rotate_ip()
                 else:
                     return
 
             tries += 1
 
-    async def download_all_sites(self, sites, parse_func):
+    async def _download_all_sites(self, sites, parse_func):
         """ test """
         async with aiohttp.ClientSession() as session:
             logging.info("Starting consumer")
@@ -147,11 +151,11 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
             for url in tqdm(sites,total=len(sites), position=0, leave=True):
 
-                task = asyncio.ensure_future(self.fetch(session,url,parse_func))
+                task = asyncio.ensure_future(self._fetch(session,url,parse_func))
                 tasks.append(task)
             return await asyncio.gather(*tasks, return_exceptions=True)
 
-    def rotate_ip(self):
+    def _rotate_ip(self):
         """ test """
         proxy_index = random.randint(0, len(self.ip_addresses) - 1)
         return {
@@ -347,7 +351,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                 in range(kwargs['page_nums'])]
 
 
-        search_index_results = await asyncio.gather(self.download_all_sites(\
+        search_index_results = await asyncio.gather(self._download_all_sites(\
             read_search_indexs_urls,self.parsing_candidates['parse_search_indexs']))
 
         mylogger.debug(f"how many index: {len(search_index_results[0])}")
@@ -408,7 +412,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         #sites_lists = self.split_list(search_comments_urls, wanted_parts=page_nums)
         sites_lists = self.split_list(search_comments_urls, wanted_parts=kwargs['page_nums'])
         for sites in sites_lists:
-            the_comment_results = await asyncio.gather(self.download_all_sites(sites,\
+            the_comment_results = await asyncio.gather(self._download_all_sites(sites,\
                             self.parsing_candidates['parse_good_comments']))
             comments_list.append(the_comment_results)
 
@@ -468,7 +472,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         # sites_lists = self.split_list(search_results_urls, wanted_parts=page_nums)
         sites_lists = self.split_list(search_results_urls, wanted_parts=kwargs['page_nums'])
         for sites in sites_lists:
-            the_product_results = await asyncio.gather(self.download_all_sites(sites,\
+            the_product_results = await asyncio.gather(self._download_all_sites(sites,\
                                     self.parsing_candidates['parse_good_info']))
             product_list.append(the_product_results)
 
