@@ -506,7 +506,7 @@ error message if something bad happens."
                 f'failed with "{str(result[1])}"', fg=typer.colors.RED
             )
             #raise typer.Exit(error)
-            #todo: to standardlize the typer.exit code
+            #todo: to standardlize the typer.exit code, define scrap-async error code
             raise typer.Exit(15)
         else:
             if mode == 1:

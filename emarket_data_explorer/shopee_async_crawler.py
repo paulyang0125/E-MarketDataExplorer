@@ -10,8 +10,8 @@
 
 Todo:\n
 x 1. tqdm is not working well for async version \n
-2. errors are not used well in async version \n
-3. need to define the datatype for this \n
+x 2. errors are not used well in async version \n
+x 3. need to define the datatype for this \n
 
 
 
@@ -31,10 +31,10 @@ import pandas as pd
 from tqdm import tqdm
 #from async_retrying import retry
 from emarket_data_explorer.classtype import CrawlerHandler
-from emarket_data_explorer import (SUCCESS,MODES)
 import emarket_data_explorer
-
-
+from emarket_data_explorer import (MODES, READ_INDEX_ERROR,\
+    CSV_WRITE_ERROR,DATA_FOLDER_WRITE_ERROR,READ_PRODUCT_ERROR, READ_COMMENT_ERROR,SUCCESS)
+from emarket_data_explorer.datatype import AsyncCrawlerResponse
 
 ### logger
 mylogger = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
             #pbar = tqdm(total=len(task), position=0, ncols=90)
 
             for future in tqdm(asyncio.as_completed(tasks),\
-                total=len(sites), position=0, leave=True):
+                total=len(sites), position=0, leave=True, desc="scrap content"):
                 result = await future
                 results.append(result)
 
@@ -368,12 +368,24 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         # read_search_indexs_urls = [self.read_search_indexs_url(keyword,page,page_length) for page \
         #      in range(page_nums)]
 
-        read_search_indexs_urls = [self.read_search_indexs_url(kwargs['keyword'],page,kwargs['page_length']) for page \
+        read_search_indexs_urls = [self.read_search_indexs_url(kwargs['keyword'],\
+            page,kwargs['page_length']) for page \
                 in range(kwargs['page_nums'])]
 
 
         search_index_results = await asyncio.gather(self._download_all_sites(\
             read_search_indexs_urls,self.parsing_candidates['parse_search_indexs']))
+
+        #todo: set_error_check for search_index_results
+        # if len(search_index_results[0]) != kwargs['page_nums'] -? - warning
+        # if search_index_results[0] is none - critical
+
+        if not search_index_results[0]:
+            return pd.DataFrame(), [], READ_INDEX_ERROR
+
+        if len(search_index_results[0]) != kwargs['page_nums']:
+            mylogger.warning("read_index_number: %i doesn't match with what we expect :%i",\
+                len(search_index_results[0]), kwargs['page_nums'])
 
         mylogger.debug(f"how many index: {len(search_index_results[0])}")
 
@@ -410,10 +422,13 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         ### write data
         mylogger.info('start writing - product')
         #self.write_csv(merged_search_index_df,keyword,data_source,crawler_mode)
-        kwargs['database'].write_csv(merged_search_index_df,kwargs['keyword'],\
+        write_csv_status = kwargs['database'].write_csv(merged_search_index_df,kwargs['keyword'],\
            kwargs['data_source'],crawler_mode)
 
-        return merged_search_index_df, self.ids_pool, SUCCESS
+        # if write_csv_status != SUCCESS:
+        #     return merged_search_index_df, self.ids_pool, write_csv_status
+
+        return merged_search_index_df, self.ids_pool, write_csv_status
 
     #async def scrap_comment(self,ids_pool,keyword,page_nums,data_source,mode):
     async def scrap_comment(self,ids_pool,kwargs):
@@ -444,9 +459,9 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         start_time = time.time()
         #my_list3[0][0][0],[0]
         for each_loop in tqdm(comments_list,total=len(comments_list),\
-            position=0, leave=True):
+            position=0, leave=True, desc="parse comments loop"):
             for each_product in tqdm(each_loop[0],total=len(each_loop[0]),\
-                 position=0, leave=True):
+                 position=0, leave=True, desc="parse comments"):
                 #product_comments_container = self.update_comment_data(each_product)
                 product_comments_container = kwargs['data_processor'].\
                     update_comment_data(each_product)
@@ -471,9 +486,9 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         ### write data
         mylogger.info('start writing - comment ')
         #self.write_csv(product_comments_container,keyword,data_source,crawler_mode)
-        kwargs['database'].write_csv(product_comments_container,kwargs['keyword'],\
+        write_csv_status = kwargs['database'].write_csv(product_comments_container,kwargs['keyword'],\
             kwargs['data_source'],crawler_mode)
-        return (product_comments_container , SUCCESS)
+        return (product_comments_container , write_csv_status)
 
     # async def scrap_product_info(self,ids_pool,merged_search_index_df,page_nums,\
     #     keyword,data_source, mode):
@@ -537,10 +552,10 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         mylogger.debug("Parsing Duration %d seconds", duration)
         ### write data
         mylogger.info('start writing - product')
-        kwargs['database'].write_csv(self.product_items_container,kwargs['keyword'],\
+        write_csv_status = kwargs['database'].write_csv(self.product_items_container,kwargs['keyword'],\
             kwargs['data_source'],crawler_mode)
 
-        return (self.product_items_container, SUCCESS)
+        return (self.product_items_container, write_csv_status)
 
     def get_page(self,num_of_product,page_length):
         """ test """
@@ -560,6 +575,10 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         kwargs['page_nums'] = page_nums
         merged_search_index_df, ids_pool, status_index = await self.scrap_index(kwargs)
 
+        if status_index == READ_INDEX_ERROR or len(ids_pool) == 0:
+             #my_return = AsyncCrawlerResponse({},[status_index])
+             return AsyncCrawlerResponse({},[status_index])
+
         ###### productinfo
 
         # (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
@@ -567,14 +586,32 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
                         merged_search_index_df,kwargs)
 
+
         ###### productcomment
 
         (product_comments_container, status_comment) = await self.scrap_comment(ids_pool,kwargs)
 
+        result_dict = {}
+        result_dict['ids_pool'] = ids_pool
+        result_dict['merged_search_index_df'] = merged_search_index_df
+        result_dict['product_items_container'] = product_items_container
+        result_dict['product_comments_container'] = product_comments_container
+        my_return = AsyncCrawlerResponse(result_dict,[status_index,status_product,status_comment])
 
-        return (ids_pool,merged_search_index_df,product_items_container,\
-            product_comments_container,[status_index,status_product,status_comment])
+        return my_return
+
+
+        # return (ids_pool,merged_search_index_df,product_items_container,\
+        #     product_comments_container,[status_index,status_product,status_comment])
+        #return AsyncCrawlerResponse(result_dict,[status_index,status_product,status_comment])
+        #return (result_dict,[status_index,status_product,status_comment])
         #return (ids_pool,[status_index,status_product,status_comment])
+
+
+
+
+
+
 
     #async def process_product(self,keyword,num_of_product,page_length,data_source,mode):
     async def process_product(self,kwargs):
@@ -588,6 +625,8 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         page_nums = self.get_page(kwargs['num_of_product'],kwargs['page_length'])
         kwargs['page_nums'] = page_nums
         merged_search_index_df, ids_pool, status_index = await self.scrap_index(kwargs)
+        if status_index == READ_INDEX_ERROR or len(ids_pool) == 0:
+             return AsyncCrawlerResponse({},[status_index])
 
         ###### productinfo
 
@@ -597,8 +636,20 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                     merged_search_index_df,kwargs)
 
 
-        return (ids_pool,merged_search_index_df,product_items_container,\
-            [status_index,status_product])
+        result_dict = {}
+        result_dict['ids_pool'] = ids_pool
+        result_dict['merged_search_index_df'] = merged_search_index_df
+        result_dict['product_items_container'] = product_items_container
+        my_return = AsyncCrawlerResponse(result_dict,[status_index,status_product])
+
+        return my_return
+
+
+        # return (ids_pool,merged_search_index_df,product_items_container,\
+        #     [status_index,status_product])
+
+
+
         #return (ids_pool,[status_index,status_product])
 
 
@@ -615,11 +666,24 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         kwargs['page_nums'] = page_nums
         merged_search_index_df, ids_pool, status_index = await self.scrap_index(kwargs)
 
+        if status_index == READ_INDEX_ERROR or len(ids_pool) == 0:
+             return AsyncCrawlerResponse({},[status_index])
+
+
         ###### productcomment
 
         # (product_comments_container, status_comment) = await self.scrap_comment(ids_pool,keyword,\
         #                     page_nums,data_source,mode)
         (product_comments_container, status_comment) = await self.scrap_comment(ids_pool,kwargs)
+
+        result_dict = {}
+        result_dict['ids_pool'] = ids_pool
+        result_dict['merged_search_index_df'] = merged_search_index_df
+        result_dict['product_comments_container'] = product_comments_container
+        my_return = AsyncCrawlerResponse(result_dict,[status_index,status_comment])
+
+
+        return my_return
 
         return (ids_pool,merged_search_index_df,product_comments_container,\
             [status_index,status_comment])
@@ -639,4 +703,11 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         kwargs['page_nums'] = page_nums
         merged_search_index_df, ids_pool, status_index = await self.scrap_index(kwargs)
 
-        return (ids_pool,merged_search_index_df,[status_index])
+        result_dict = {}
+        result_dict['ids_pool'] = ids_pool
+        result_dict['merged_search_index_df'] = merged_search_index_df
+        my_return = AsyncCrawlerResponse(result_dict,[status_index])
+
+
+        #return (ids_pool,merged_search_index_df,[status_index])
+        return my_return

@@ -30,6 +30,11 @@ class CrawlerResponseForDict(NamedTuple):
     result: Dict[str, Any]
     error: int
 
+class AsyncCrawlerResponse(NamedTuple):
+    """data model to Crawler response"""
+    results: Dict[str,Any]
+    errors: List[int]
+
 
 ###dataclass
 class ScrapingInfo(NamedTuple):

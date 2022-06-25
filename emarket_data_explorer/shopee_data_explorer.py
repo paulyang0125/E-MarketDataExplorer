@@ -591,8 +591,8 @@ class ShopeeExplorer(Explorer):
                             database=self._shopee_async_db_handler) #return (ids_pool,[status_index])
 
         #todo: this is not tested yet and also not implemented
-        if not result:
-            return EMPTY_SCRAP_ERROR
+        #if not result:
+        #    return EMPTY_SCRAP_ERROR
 
         return result # in scrap, it returns ScrapingInfo(scraper_response, read.error)
 

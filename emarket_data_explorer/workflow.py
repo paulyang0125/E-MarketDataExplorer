@@ -46,7 +46,8 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         #     kwargs['num_of_product'],kwargs['page_length'], kwargs['data_source'],
         #     kwargs['mode'], kwargs['data_processor'],kwargs['database']),debug=True)
 
-        result = asyncio.run(kwargs['handler'].process_all(kwargs),debug=True)
+        #result = asyncio.run(kwargs['handler'].process_all(kwargs),debug=True)
+        read = asyncio.run(kwargs['handler'].process_all(kwargs),debug=True)
 
 
 
@@ -56,14 +57,22 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
+        # scraper_response = {
+        #     "ids_pool":result[0],
+        #     "obtained_index_num":len(result[1].index),
+        #     "obtained_good_num":len(result[2].index),
+        #     "obtained_comment_num":len(result[3].index),
+        # }
+
         scraper_response = {
-            "ids_pool":result[0],
-            "obtained_index_num":len(result[1].index),
-            "obtained_good_num":len(result[2].index),
-            "obtained_comment_num":len(result[3].index),
+            "ids_pool":read.results['ids_pool'],
+            "obtained_index_num":len(read.results['merged_search_index_df'].index),
+            "obtained_good_num":len(read.results['product_items_container'].index),
+            "obtained_comment_num":len(read.results['product_comments_container'].index),
         }
 
-        return (scraper_response, result[4])
+        #return (scraper_response, result[4])
+        return (scraper_response, read.errors)
 
         #return result
 
@@ -94,17 +103,28 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         # result = asyncio.run(kwargs['handler'].process_product(kwargs['keyword'],\
         #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
         #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
-        result = asyncio.run(kwargs['handler'].process_product(kwargs),debug=True)
+        #result = asyncio.run(kwargs['handler'].process_product(kwargs),debug=True)
+        read = asyncio.run(kwargs['handler'].process_product(kwargs),debug=True)
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
         scraper_response = {
-            "ids_pool":result[0],
-            "obtained_index_num":len(result[1].index),
-            "obtained_good_num":len(result[2].index),
+            "ids_pool":read.results['ids_pool'],
+            "obtained_index_num":len(read.results['merged_search_index_df'].index),
+            "obtained_good_num":len(read.results['product_items_container'].index),
 
         }
-        return (scraper_response, result[3])
+
+        #return (scraper_response, result[4])
+        return (scraper_response, read.errors)
+
+        # scraper_response = {
+        #     "ids_pool":result[0],
+        #     "obtained_index_num":len(result[1].index),
+        #     "obtained_good_num":len(result[2].index),
+
+        # }
+        # return (scraper_response, result[3])
 
     def do_workflow_product_comment(self,**kwargs):
         """ workflow for comment """
@@ -115,18 +135,28 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
         #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
 
-        result = asyncio.run(kwargs['handler'].process_comment(kwargs),debug=True)
+        #result = asyncio.run(kwargs['handler'].process_comment(kwargs),debug=True)
+        read = asyncio.run(kwargs['handler'].process_comment(kwargs),debug=True)
 
         duration = time.time() - start_time
         print(f"Duration {duration} seconds")
 
         scraper_response = {
-            "ids_pool":result[0],
-            "obtained_index_num":len(result[1].index),
-            "obtained_comment_num":len(result[2].index),
+            "ids_pool":read.results['ids_pool'],
+            "obtained_index_num":len(read.results['merged_search_index_df'].index),
+            "obtained_comment_num":len(read.results['product_comments_container'].index),
         }
 
-        return (scraper_response, result[3])
+        #return (scraper_response, result[4])
+        return (scraper_response, read.errors)
+
+        # scraper_response = {
+        #     "ids_pool":result[0],
+        #     "obtained_index_num":len(result[1].index),
+        #     "obtained_comment_num":len(result[2].index),
+        # }
+
+        # return (scraper_response, result[3])
 
 
         #return result
@@ -141,8 +171,8 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         #     kwargs['num_of_product'], kwargs['page_length'], kwargs['data_source'],\
         #         kwargs['mode'],kwargs['data_processor'],kwargs['database']),debug=True)
 
-        result = asyncio.run(kwargs['handler'].process_index(kwargs),debug=True)
-
+        #result = asyncio.run(kwargs['handler'].process_index(kwargs),debug=True)
+        read = asyncio.run(kwargs['handler'].process_index(kwargs),debug=True)
 
         #shopee_handler = ShopeeAsycCrawlerHandler(ip_addresses=ip_addresses,\
         # proxy_auth=proxy_auth,header=header)
@@ -152,10 +182,18 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         print(f"Duration {duration} seconds")
 
         scraper_response = {
-            "ids_pool":result[0],
-            "obtained_index_num":len(result[1].index),
+            "ids_pool":read.results['ids_pool'],
+            "obtained_index_num":len(read.results['merged_search_index_df'].index),
         }
 
-        return (scraper_response, result[2])
+        return (scraper_response, read.errors)
+
+
+        # scraper_response = {
+        #     "ids_pool":result[0],
+        #     "obtained_index_num":len(result[1].index),
+        # }
+
+        # return (scraper_response, result[2])
 
         #return result
