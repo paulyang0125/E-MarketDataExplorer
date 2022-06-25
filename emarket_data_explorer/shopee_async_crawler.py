@@ -9,7 +9,7 @@
 """This module provides the Shopee Async Crawler functionality.
 
 Todo:\n
-1. tqdm is not working well for async version \n
+x 1. tqdm is not working well for async version \n
 2. errors are not used well in async version \n
 3. need to define the datatype for this \n
 
@@ -18,17 +18,15 @@ Todo:\n
 """
 # shopee_data_explorer/shopee_async_crawler.py
 
-
-from abc import ABC, abstractmethod
 import asyncio
 import os
 import time
 import logging
 import aiohttp
 import random
-import nest_asyncio
-nest_asyncio.apply()
-
+#import nest_asyncio
+#nest_asyncio.apply()
+#import tqdm.asyncio
 import pandas as pd
 from tqdm import tqdm
 #from async_retrying import retry
@@ -109,16 +107,26 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
     async def _fetch(self, session, url, parsing_func):
         """ test """
+
         aio_proxies = self._rotate_ip()
         timeout = aiohttp.ClientTimeout(total=25)
         mylogger.debug("start fetching")
         tries = 0
+
         while tries < 3:
             mylogger.debug(f"proxy: {aio_proxies['http']}")
             try:
                 start = time.monotonic()
                 async with session.get(url, headers=self.header,proxy=aio_proxies['http'],\
                     timeout=timeout,raise_for_status=True) as response:
+                    # target = url.rpartition('/')[-1]
+                    # size = int(response.headers.get('content-length', 0)) or None
+                    # position = await progress_queue.get()
+                    # progressbar = tqdm(
+                    #     desc=target, total=size, leave=False,
+                    # )
+
+
 
                     if response.status == 200:
                         mylogger.debug('each duration: %d',time.monotonic() - start)
@@ -145,15 +153,28 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
     async def _download_all_sites(self, sites, parse_func):
         """ test """
+        results = []
         async with aiohttp.ClientSession() as session:
-            logging.info("Starting consumer")
+            logging.info("Starting to create the session")
             tasks = []
 
-            for url in tqdm(sites,total=len(sites), position=0, leave=True):
-
+            #progress_queue = asyncio.Queue(loop=loop)
+            #for pos in range(5):
+            #    progress_queue.put_nowait(pos)
+            #for url in tqdm(sites,total=len(sites), position=0, leave=True):
+            for url in sites:
+            #for url in tqdm.asyncio(sites,total=len(sites), position=0, leave=True):
                 task = asyncio.ensure_future(self._fetch(session,url,parse_func))
                 tasks.append(task)
-            return await asyncio.gather(*tasks, return_exceptions=True)
+            #pbar = tqdm(total=len(task), position=0, ncols=90)
+
+            for future in tqdm(asyncio.as_completed(tasks),\
+                total=len(sites), position=0, leave=True):
+                result = await future
+                results.append(result)
+
+            #return await asyncio.gather(*tasks, return_exceptions=True)
+            return results
 
     def _rotate_ip(self):
         """ test """
@@ -422,8 +443,10 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         mylogger.info('start parsing - comment ')
         start_time = time.time()
         #my_list3[0][0][0],[0]
-        for each_loop in comments_list:
-            for each_product in each_loop[0]:
+        for each_loop in tqdm(comments_list,total=len(comments_list),\
+            position=0, leave=True):
+            for each_product in tqdm(each_loop[0],total=len(each_loop[0]),\
+                 position=0, leave=True):
                 #product_comments_container = self.update_comment_data(each_product)
                 product_comments_container = kwargs['data_processor'].\
                     update_comment_data(each_product)

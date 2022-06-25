@@ -9,7 +9,7 @@
 """This module provides the E-market Data Explorer CLI.
 
 
-Todo at v1.3:\n
+Todo at v1.4:\n
 1. will move init_data job to config.py or data_builder.py in v1.3+\n
 2. will implement retry by adding the abstract class to decouple the retry mechanism
 
@@ -26,7 +26,8 @@ from typing import Optional
 
 import typer
 from emarket_data_explorer import (
-    SUCCESS, ERRORS, __app_name__, __version__, config, database, constant, shopee_crawler, shopee_data_explorer
+    SUCCESS, ERRORS, __app_name__, __version__, config, database, \
+        constant, shopee_crawler, shopee_data_explorer
 )
 
 
@@ -358,7 +359,8 @@ error message if something bad happens."
     #    {searcher_type}, retry - {retry}')
 
     mylogger.debug('inputs are args - %s, mode - %i, searcher-type - \
-        %i, retry - %i, verbose - %i', required_args, mode, searcher_type, retry, verbose_level)
+        %i, retry - %i, verbose - %i', required_args, mode, searcher_type, \
+            retry, verbose_level)
 
     if searcher_type == 1:
         if len(required_args) < 2:
@@ -369,15 +371,17 @@ error message if something bad happens."
         else:
             keyword = required_args[0]
             num_of_product = int(required_args[1])
-            #todo: if num_of_product < 10, or default one (now is 10) need to fill the minimum to at least default
+            #todo: if num_of_product < 10, or default one (now is 10) \
+            # need to fill the minimum to at least default
             #if num_of_product
             try:
                 if required_args[2]:
                     page_length = int(required_args[2])
             except IndexError:
                 page_length = constant.DEFAULT_PAGE_LENGTH
-                typer.secho(f'page_length is not given, the app will use default\
-                     length:{constant.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
+                typer.secho(f'page_length is not given,'
+                            f'the app will use default length:{constant.DEFAULT_PAGE_LENGTH}'
+                            , fg=typer.colors.YELLOW)
 
             typer.secho(
                     f"""scrap for {keyword} is starting!""",
@@ -480,8 +484,9 @@ error message if something bad happens."
                 page_length = int(required_args[2])
         except IndexError:
             page_length = constant.DEFAULT_PAGE_LENGTH_ASYNC
-            typer.secho(f'page_length is not given, the app will use default\
-                    length:{constant.DEFAULT_PAGE_LENGTH}', fg=typer.colors.YELLOW)
+            typer.secho(f'page_length is not given,'
+                        f'the app will use default length:{constant.DEFAULT_PAGE_LENGTH}'
+                        , fg=typer.colors.YELLOW)
 
         typer.secho(
                 f"""scrap for {keyword} is starting!""",
@@ -569,7 +574,7 @@ def main(
 
     Author:
 
-    Currently written maintained by Paul Yang <paulyang0125@gmail> and \
+    Currently written and maintained by Paul Yang <paulyang0125@gmail> and \
 Kana Kunikata <vinaknkt@gmail.com>.
 
     """
