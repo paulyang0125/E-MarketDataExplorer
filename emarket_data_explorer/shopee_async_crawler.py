@@ -9,23 +9,17 @@
 """This module provides the Shopee Async Crawler functionality.
 
 Todo:\n
-1.
-
-
 
 """
 # shopee_data_explorer/shopee_async_crawler.py
 
 import asyncio
 import os
+import random
 import time
 import logging
-import aiohttp
-import random
 from typing import Any, Dict, List,Tuple
-#import nest_asyncio
-#nest_asyncio.apply()
-#import tqdm.asyncio
+import aiohttp
 import pandas as pd
 from tqdm import tqdm
 #from async_retrying import retry
@@ -37,48 +31,13 @@ from emarket_data_explorer.data_process import CrawlerDataProcesser
 
 ### logger
 mylogger = logging.getLogger(__name__)
-#mylogger.setLevel(logging.DEBUG)
-#fh = logging.FileHandler('e-market.log')
 fh = logging.FileHandler(f'{__name__}.log')
-#fh.setLevel(logging.DEBUG)
-# create console handler with a higher log level
 ch = logging.StreamHandler()
-#ch.setLevel(logging.DEBUG)
-# create formatter and add it to the handlers
-#formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-#ch.setFormatter(formatter)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 # add the handlers to logger
 mylogger.addHandler(ch)
 mylogger.addHandler(fh)
-
-
-# class CrawlerHandler(ABC):
-#     """ test """
-
-#     def __init__(self, ip_addresses,proxy_auth):
-
-#         self.ip_addresses = ip_addresses
-#         self.proxy_auth = proxy_auth
-
-#     @abstractmethod
-#     def fetch(self,session, url, parsing_func):
-#         """ test """
-#         #pass
-
-#     @abstractmethod
-#     def rotate_ip(self):
-#         """
-#         This abstract method should return a list
-#         :rtype: list
-#         """
-#         #pass
-
-#     @abstractmethod
-#     async def download_all_sites(self,sites,parse_func):
-#         """ test """
-#         #pass
 
 
 class ShopeeAsyncCrawlerHandler(CrawlerHandler):
@@ -126,8 +85,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                     # progressbar = tqdm(
                     #     desc=target, total=size, leave=False,
                     # )
-
-
 
                     if response.status == 200:
                         mylogger.debug('each duration: %d',time.monotonic() - start)
@@ -185,31 +142,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         "https": f"https://{self.proxy_auth}@{self.ip_addresses[proxy_index]}",
         "http": f"http://{self.proxy_auth}@{self.ip_addresses[proxy_index]}"}
 
-    # def parse_search_indexs(self,text):
-    #     """ test """
-    #     soup = BeautifulSoup(text, "lxml")
-    #     getjson=json.loads(soup.text)
-    #     print("parse_search_indexs succeeds")
-    #     return getjson['items']
-
-    # def parse_good_info(self,text):
-    #     """ test """
-    #     processed_goods = text.replace("\\n","^n")
-    #     processed_goods = processed_goods.replace("\\t","^t")
-    #     processed_goods = processed_goods.replace("\\r","^r")
-    #     goods_json = json.loads(processed_goods)
-    #     print("parse_good_info succeeds")
-    #     return goods_json
-
-    # def parse_good_comments(self,text):
-    #     """ test """
-    #     processed_comments_results= text.replace("\\n","^n")
-    #     processed_comments_results=processed_comments_results.replace("\\t","^t")
-    #     processed_comments_results=processed_comments_results.replace("\\r","^r")
-    #     comments_json = json.loads(processed_comments_results)
-    #     print("read_good_comments succeeds")
-    #     return comments_json['comments']
-
 
     def read_search_indexs_url(self,keyword: str, page: int, page_length: int) -> str:
         """ create the index url based on shopee api """
@@ -231,22 +163,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
             str(shop_id) + '&offset=0&limit=200&flag=1&filter=0'
         return url
 
-    # def process_raw_search_index(self, result:list) -> pd.DataFrame:
-    #     """ test """
-    #     product_items = {}
-    #     #try:
-    #     if not isinstance(result, NameError) and result:
-    #         print(f"type: {type(result)}")
-    #         for count, _ in enumerate(result):
-    #             product_items[count] = result[count]['item_basic']
-
-    #     #except NameError as ne:
-    #     #    print('parsing exception:', str(ne))
-
-    #     product_items=pd.DataFrame(product_items).T
-
-    #     return product_items
-
     def split_list(self, alist:List[str], wanted_parts:int=1) -> List[List[str]]:
         """ divide the number of task into the multiplier
         of wanted_parts, like f([100]) becomes [[50],[50]]
@@ -256,112 +172,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         return [ alist[i*length // wanted_parts: (i+1)*length // wanted_parts]
                  for i in range(wanted_parts) ]
 
-    # def clean_product_data(self):
-    #     """ test """
-    #     self.product_articles= []
-    #     self.product_sku= []
-    #     self.product_tags = []
-
-    # def extract_product_data(self, product:dict) -> None:
-    #     """ test """
-    #     try:
-    #         if product['item']:
-    #             if product['item']['description']:
-    #                 self.product_articles.append(product['item']['description']\
-    #                                              .replace('\n', ' ').replace('\r', ''))
-    #             else:
-    #                 self.product_articles.append('na')
-    #             if product['item']['models']:
-    #                 # bug, to remove /n and /r from list of dict of value
-    #                 #i for i in product['item']['models']
-    #                 self.product_sku.append(product['item']['models'])
-    #                 #self.product_sku.append(product['item']['models']\
-    #                 #                        .replace('\n', ' ').replace('\r', ''))
-    #             else:
-    #                 self.product_sku.append('na')
-    #             if product['item']['hashtag_list']:
-    #                 self.product_tags.append(product['item']['hashtag_list'])
-    #                 #self.product_tags.append(product['item']['hashtag_list']\
-    #                 #                         .replace('\n', ' ').replace('\r', ''))
-    #             else:
-    #                 self.product_sku.append('na')
-
-
-    #     except KeyError as error:
-    #         print('I got a KeyError - reason "%s"' % str(error))
-    #         self.product_articles.append('na')
-    #         self.product_sku.append('na')
-    #         self.product_tags.append('na')
-    #     except TypeError as error:
-    #         print('I got a TypeError - reason "%s"' % str(error))
-    #         self.product_articles.append('na')
-    #         self.product_sku.append('na')
-    #         self.product_tags.append('na')
-
-
-    # def aggregate_product_data(self, product_items_container: pd.DataFrame, \
-    #     product_items: pd.DataFrame) -> pd.DataFrame:
-    #     """ test """
-
-    #     #for debug
-    #     #global debug_list_1
-    #     #global debug_list_2
-    #     #debug_list_1 = self.product_sku
-    #     #debug_list_2 = self.product_tags
-
-    #     product_items['articles'] = pd.Series(self.product_articles)
-    #     product_items['SKU'] = pd.Series(self.product_sku)
-    #     product_items['hashtag_list'] = pd.Series(self.product_tags)
-    #     product_items_container = pd.concat([product_items_container,product_items],\
-    #         axis=0)
-    #     return product_items_container
-
-    # def write_csv(self, product_container:pd.DataFrame,my_keyword:str, \
-    #     data_source: int,crawler_mode: str) -> int:
-    #     """write the scrapped data stored in dataframe into CSV"""
-    #     try:
-    #         source = DATA_SOURCES[data_source]
-    #         file_name = f'{source}_{my_keyword}_{crawler_mode}.csv'
-    #         #product_container = product_container.replace(r'\r+|\n+|\t+','', regex=True)
-    #         #product_container.replace(to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"], value=["",""], regex=True, inplace=True)
-    #         product_container.to_csv(file_name,encoding = 'utf-8-sig')
-    #         print(f"the container has wrote into {file_name} in {self.data_path}")
-    #         #os.chdir(self.owd)
-    #         return SUCCESS
-    #     except OSError:  # Catch file IO problems
-    #         #os.chdir(self.owd)
-    #         return CSV_WRITE_ERROR
-
-    # def update_comment_data(self, comment) -> pd.DataFrame:
-    #     """ test """
-    #     #mydebug_list.append(comment)
-    #     if not comment:
-    #         user_comment = pd.DataFrame()
-    #     else:
-    #         user_comment = pd.DataFrame(comment) #covert comment to data frame
-    #     #mydebug_list.append(user_comment)
-
-    #     if not user_comment.empty:
-    #         models=[]
-    #         for item in user_comment['product_items']:
-    #             if pd.DataFrame(item).filter(regex = 'model_name').shape[1] != 0:
-    #                 models.append(pd.DataFrame(item)['model_name'].tolist())
-    #             else:
-    #                 mylogger.warning('No model_name')
-    #                 models.append(None)
-
-    #         user_comment['product_items']= models # puts models aka SKUs in
-
-    #     self.product_comments_container = pd.concat([self.product_comments_container,\
-    #          user_comment],axis= 0)
-    #     #mydebug_list.append(self.product_comments_container)
-    #     # debug
-    #     #print("process_comment_data->comment_container:head", product_comments_container.head(5))
-    #     #print("process_comment_data->comment_container:tail", product_comments_container.tail(5))
-
-    #     return self.product_comments_container
-
-    #async def scrap_index(self,keyword,page_nums,page_length,data_source,mode):
     async def scrap_index(self,kwargs:Dict[str,Any]) \
         ->  Tuple[pd.DataFrame,List[tuple], List[int]]:
         """ read the search result by shopee api """
@@ -500,9 +310,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
             kwargs['data_source'],crawler_mode)
         return (product_comments_container , write_csv_status)
 
-    # async def scrap_product_info(self,ids_pool,merged_search_index_df,page_nums,\
-    #     keyword,data_source, mode):
-
 
     async def scrap_product_info(self,ids_pool:List[tuple],merged_search_index_df:pd.DataFrame,\
         kwargs:Dict[str,Any]) -> Tuple[pd.DataFrame,List[int]]:
@@ -576,8 +383,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         return page_nums
 
 
-    # async def process_all(self,keyword,num_of_product,page_length,data_source,mode,\
-    #     data_handler, db_handler):
     async def process_all(self,kwargs:Dict[str,Any]) -> AsyncCrawlerResponse:
         """ the entry function to be called by a workflow class for ALL mode """
         ###### index
@@ -661,13 +466,10 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
         # return (ids_pool,merged_search_index_df,product_items_container,\
         #     [status_index,status_product])
-
-
-
         #return (ids_pool,[status_index,status_product])
 
 
-    #async def process_comment(self,keyword,num_of_product,page_length,data_source,mode):
+
     async def process_comment(self,kwargs:Dict[str,Any]) -> AsyncCrawlerResponse:
         """ the entry function to be called by a workflow class for comment mode """
 
@@ -703,7 +505,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         #     [status_index,status_comment])
 
 
-    #async def process_index(self,keyword,num_of_product,page_length,data_source,mode):
+
     async def process_index(self,kwargs:Dict[str,Any]) -> AsyncCrawlerResponse:
         """the entry function to be called by a workflow class for index mode"""
 
