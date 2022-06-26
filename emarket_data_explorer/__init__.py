@@ -29,8 +29,9 @@ __version__ = "1.1.0"
     CSV_WRITE_ERROR,
     FIGURE_ERROR,
     EDA_ERROR,
+    EMPTY_SCRAP_ERROR,
 
-) = range(15)
+) = range(16)
 
 #mode enumeration
 (
@@ -38,7 +39,8 @@ __version__ = "1.1.0"
     ALL,
     PRODUCT_ITEMS,
     PRODUCT_COMMENTS,
-) = range(4)
+    PRODUCT_INDEXES,
+) = range(5)
 
 #source enumeration
 (
@@ -51,9 +53,10 @@ __version__ = "1.1.0"
 #mode definition
 
 MODES = {
-    ALL: "product_goods:product_comments",
+    ALL: "product_goods:product_comments:product_indexes",
     PRODUCT_ITEMS: "product_goods",
-    PRODUCT_COMMENTS: "product_comments"
+    PRODUCT_COMMENTS: "product_comments",
+    PRODUCT_INDEXES:"product_indexes",
 }
 
 #data_source definition
@@ -78,5 +81,6 @@ ERRORS = {
     JSON_ERROR: "json error",
     CSV_WRITE_ERROR: "csv write error",
     FIGURE_ERROR: "made figure but failed",
-    EDA_ERROR: "during EDA, something goes wrong"
+    EDA_ERROR: "during EDA, something goes wrong",
+    EMPTY_SCRAP_ERROR: "nothing returned from scrap"
 }

@@ -17,9 +17,9 @@ Todo:\n
 # shopee_data_explorer/shopee_data_explorer.py
 
 
-
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Tuple
 import logging
+
 import platform
 import pandas as pd
 from matplotlib.font_manager import FontProperties
@@ -29,10 +29,16 @@ from emarket_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_
 import emarket_data_explorer
 from emarket_data_explorer import shopee_eda
 from emarket_data_explorer.database import DatabaseHandler
-from emarket_data_explorer.shopee_crawler import CrawlerHandler
+from emarket_data_explorer.shopee_crawler import ShopeeCrawlerHandler
+from emarket_data_explorer.shopee_selenium_crawler import ShopeeSeleniumCrawlerHandler
 from emarket_data_explorer.data_process import CrawlerDataProcesser
 from emarket_data_explorer.shopee_eda import ShopeeEDA
-
+from emarket_data_explorer.shopee_async_crawler import ShopeeAsyncCrawlerHandler
+from emarket_data_explorer.data_process import ShopeeAsyncCrawlerDataProcesser
+from emarket_data_explorer.database import ShopeeAsyncDatabaseHandler
+from emarket_data_explorer.datatype import ScrapingInfo, ScrapingInfoForList
+from emarket_data_explorer.workflow import ShopeeAsyncWorkFlow
+from emarket_data_explorer.classtype import Explorer
 
 mylogger = logging.getLogger(__name__)
 fh = logging.FileHandler(f'{__name__}.log')
@@ -46,23 +52,8 @@ mylogger.addHandler(ch)
 mylogger.addHandler(fh)
 
 
-class ScrapingInfo(NamedTuple):
-    """ data model to CLI"""
-    scraping_info: Dict[str, Any]
-    error: int
 
-class ScrapingInfoForList(NamedTuple):
-    """ data model for index"""
-    scraping_info: List[Dict[str, Any]]
-    error: int
-
-class ScrapingInfoForDF(NamedTuple):
-    """ data model for dataframe"""
-    scraping_info: pd.DataFrame
-    error: int
-
-
-class Explorer:
+class ShopeeExplorer(Explorer):
     """ this class acts as the MVC controller between the implementation of
     crawlers and eda tools, and the CLI interface
 
@@ -74,10 +65,24 @@ class Explorer:
         #print("1. header type: " + str(type(header)))
         #print("1. header items: " + str(header.items))
 
-        self._crawler_handler = CrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
+        self._crawler_handler = ShopeeCrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
             kwargs['my_header'],kwargs['webdriver_path'])
+
+        self._selenium_crawler_handler = ShopeeSeleniumCrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
+            kwargs['my_header'],kwargs['webdriver_path'])
+
         self._data_processor = CrawlerDataProcesser(kwargs['data_source'])
         self._db_handler = DatabaseHandler(kwargs['data_path'],kwargs['db_path'])
+
+        self._shopee_async_data_processor = ShopeeAsyncCrawlerDataProcesser(kwargs['data_source'])
+        self._shopee_async_db_handler = ShopeeAsyncDatabaseHandler(kwargs['data_path']\
+            ,kwargs['db_path'])
+
+        self._async_crawler_handler = ShopeeAsyncCrawlerHandler(ip_addresses=\
+            kwargs['ip_addresses'],proxy_auth=kwargs['proxy_auth'],header=kwargs['my_header'],\
+                data_handler = self._shopee_async_data_processor)
+
+
         self.a_page_product_index = []
         self.data_path = kwargs['data_path']
         self.data_source = kwargs['data_source']
@@ -89,7 +94,7 @@ class Explorer:
             "keyword":keyword,
             "page_num": page_num,
         }
-        read = self._crawler_handler.read_a_page_selenium_search_indexs(keyword,page_num)
+        read = self._selenium_crawler_handler.read_a_page_selenium_search_indexs(keyword,page_num)
 
         if read.error == READ_INDEX_ERROR:
             return ScrapingInfo(scraper_init, read.error)
@@ -253,7 +258,7 @@ class Explorer:
 
 
     def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
-        ) -> ScrapingInfo:
+            ) -> ScrapingInfo:
         """the main entry of scrap command that scraps data source with the specified
            number of the result based on mode suer select.\n
 
@@ -388,3 +393,69 @@ class Explorer:
             else:
                 print("containers are empty")
                 return ScrapingInfo(scraper_init, read.error)
+
+    def scrap_async(self, keyword: str, num_of_product: int, mode:int,\
+        page_length:int) -> ScrapingInfo:
+        """ the main entry of async version of scraping"""
+
+        work_flower = ShopeeAsyncWorkFlow()
+        #scrap_params = {}
+        #scrap_params['keyword'] = keyword
+        #scrap_params['num_of_product'] = num_of_product
+
+        if mode == emarket_data_explorer.ALL:
+            result = work_flower.do_workflow_all(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.\
+                    data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler)
+                    #kwargs['data_processor'],kwargs['database']
+                    #return (ids_pool,[status_index,status_product,status_comment])
+
+        if mode == emarket_data_explorer.PRODUCT_ITEMS:
+            result = work_flower.do_workflow_product_info(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index,status_product])
+
+        if mode == emarket_data_explorer.PRODUCT_COMMENTS:
+            result = work_flower.do_workflow_product_comment(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index,status_comment])
+
+        if mode == emarket_data_explorer.PRODUCT_INDEXES:
+            result = work_flower.do_workflow_product_index(handler=self._async_crawler_handler,\
+                 keyword=keyword,num_of_product=num_of_product,\
+                page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
+                        self._shopee_async_data_processor,\
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index])
+
+        #todo: this is not tested yet and also not implemented
+        #if not result:
+        #    return EMPTY_SCRAP_ERROR
+
+        return result # in scrap, it returns ScrapingInfo(scraper_response, read.error)
+
+
+        # scraper_response = {
+        #     "keyword":keyword,
+        #     "page_num": page_num,
+        #     "page_length":page_length,
+        #     "obtained_product_num":len(product_items_container.index),
+        #     "obtained_comment_num":len(product_comments_container.index),
+        #     }
+
+        # or
+        #scraper_response = {
+        #    "keyword":keyword,
+        #    "page_num": page_num,
+        #    "page_length":page_length,
+        #    "obtained_comment_num":len(product_comments_container.index),
+        #    }
