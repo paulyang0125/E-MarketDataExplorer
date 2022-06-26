@@ -6,16 +6,16 @@
 # version ='1.3'
 # ---------------------------------------------------------------------------
 
-"""This module provides the Shopee Data Definition.
+"""This module provides the Shopee selenium crawler.
 
 Todo:\n
-1.
+1. very ugly codes too many if-else and for-loop, need to refactor \n
+2. will use multiple thread to enhance the performance in v1.6
 
 
 """
 # shopee_data_explorer/shopee_selenium_crawler.py
 import time
-import json
 import logging
 import random
 #from threading import TIMEOUT_MAX
@@ -24,8 +24,7 @@ from bs4 import BeautifulSoup
 from seleniumwire import webdriver
 import requests
 from emarket_data_explorer.classtype import CrawlerHandler
-from emarket_data_explorer import (READ_INDEX_ERROR, \
-    DATA_FOLDER_WRITE_ERROR,READ_PRODUCT_ERROR, READ_COMMENT_ERROR,SUCCESS)
+from emarket_data_explorer import (READ_INDEX_ERROR,SUCCESS)
 
 from emarket_data_explorer.datatype import CrawlerResponse
 

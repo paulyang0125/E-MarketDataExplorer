@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Paul Yang and Kana Kunikata
-# Created Date: 24/05/2022
-# version ='1.1'
+# Created Date: 26/06/2022
+# version ='1.3'
 # ---------------------------------------------------------------------------
 
 """This module provides the E-market Data Explorer CLI.
 
 
-Todo at v1.4:\n
-1. will move init_data job to config.py or data_builder.py in v1.3+\n
-2. will implement retry by adding the abstract class to decouple the retry mechanism
-
+Todo:\n
+1. will move init_data job to config.py or data_builder.py in v1.4\n
+2. will implement retry by adding the abstract class to decouple the retry mechanism in v1.4\n
+3. to standardized the typer.exit code, define scrap-async error code in v1.4
 
 """
 
@@ -109,7 +109,7 @@ def init(
     else:
         typer.secho(f"The shopee explorer config is {config_file_path}", fg=typer.colors.GREEN)
 
-    #todo: will move init_data job to config.py or data_builder.py in v1.3+
+    #todo: will move init_data job to config.py or data_builder.py in v1.4
     data_init_error = shopee_crawler.init_data(Path(data_path))
 
     if data_init_error:
@@ -371,9 +371,16 @@ error message if something bad happens."
         else:
             keyword = required_args[0]
             num_of_product = int(required_args[1])
-            #todo: if num_of_product < 10, or default one (now is 10) \
+            #if num_of_product < 10, or default one (now is 10)
             # need to fill the minimum to at least default
             #if num_of_product
+            if num_of_product < constant.DEFAULT_PAGE_LENGTH:
+                num_of_product = constant.DEFAULT_PAGE_LENGTH
+
+            # we limit the number of item to be scraped.
+            if num_of_product > 100:
+                num_of_product = 100
+
             try:
                 if required_args[2]:
                     page_length = int(required_args[2])
@@ -479,6 +486,17 @@ error message if something bad happens."
     else:
         keyword = required_args[0]
         num_of_product = int(required_args[1])
+        #if num_of_product < 10, or default one (now is 10)
+        # need to fill the minimum to at least default
+        #if num_of_product
+        if num_of_product < constant.DEFAULT_PAGE_LENGTH:
+            num_of_product = constant.DEFAULT_PAGE_LENGTH
+
+        # we limit the number of item to be scraped.
+        if num_of_product > 100:
+            num_of_product = 100
+
+
         try:
             if required_args[2]:
                 page_length = int(required_args[2])
@@ -506,7 +524,8 @@ error message if something bad happens."
                 f'failed with "{str(result[1])}"', fg=typer.colors.RED
             )
             #raise typer.Exit(error)
-            #todo: to standardlize the typer.exit code, define scrap-async error code
+            #todo: to standardized the typer.exit code, define scrap-async error code,
+            # will do in v1.4
             raise typer.Exit(15)
         else:
             if mode == 1:

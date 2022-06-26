@@ -17,15 +17,15 @@ Todo:\n
 # shopee_data_explorer/shopee_data_explorer.py
 
 
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Tuple
 import logging
-import time
+
 import platform
 import pandas as pd
 from matplotlib.font_manager import FontProperties
 from tqdm import tqdm
 from emarket_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
-    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR, EMPTY_SCRAP_ERROR
+    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR
 import emarket_data_explorer
 from emarket_data_explorer import shopee_eda
 from emarket_data_explorer.database import DatabaseHandler
@@ -552,15 +552,15 @@ class ShopeeExplorer(Explorer):
 
     def scrap_async(self, keyword: str, num_of_product: int, mode:int,\
         page_length:int) -> ScrapingInfo:
-        """ async version of scraping"""
+        """ the main entry of async version of scraping"""
 
-        workflower = ShopeeAsyncWorkFlow()
+        work_flower = ShopeeAsyncWorkFlow()
         #scrap_params = {}
         #scrap_params['keyword'] = keyword
         #scrap_params['num_of_product'] = num_of_product
 
         if mode == emarket_data_explorer.ALL:
-            result = workflower.do_workflow_all(handler=self._async_crawler_handler,\
+            result = work_flower.do_workflow_all(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
                 page_length=page_length,data_source=self.\
                     data_source,mode=mode,data_processor=\
@@ -570,25 +570,28 @@ class ShopeeExplorer(Explorer):
                     #return (ids_pool,[status_index,status_product,status_comment])
 
         if mode == emarket_data_explorer.PRODUCT_ITEMS:
-            result = workflower.do_workflow_product_info(handler=self._async_crawler_handler,\
+            result = work_flower.do_workflow_product_info(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
                 page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
                         self._shopee_async_data_processor,\
-                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index,status_product])
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index,status_product])
 
         if mode == emarket_data_explorer.PRODUCT_COMMENTS:
-            result = workflower.do_workflow_product_comment(handler=self._async_crawler_handler,\
+            result = work_flower.do_workflow_product_comment(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
                 page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
                         self._shopee_async_data_processor,\
-                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index,status_comment])
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index,status_comment])
 
         if mode == emarket_data_explorer.PRODUCT_INDEXES:
-            result = workflower.do_workflow_product_index(handler=self._async_crawler_handler,\
+            result = work_flower.do_workflow_product_index(handler=self._async_crawler_handler,\
                  keyword=keyword,num_of_product=num_of_product,\
                 page_length=page_length,data_source=self.data_source,mode=mode,data_processor=\
                         self._shopee_async_data_processor,\
-                            database=self._shopee_async_db_handler) #return (ids_pool,[status_index])
+                            database=self._shopee_async_db_handler) \
+                                #return (ids_pool,[status_index])
 
         #todo: this is not tested yet and also not implemented
         #if not result:

@@ -9,7 +9,6 @@
 """This module provides the Shopee Data Definition.
 
 Todo:\n
-1.
 
 
 """

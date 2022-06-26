@@ -9,8 +9,8 @@
 """This module provides the Shopee Data process functionality.
 
 Todo:\n
-1. when do parallel in v1.3, this aggregation shouldn't work
-   so need a new way to aggregate later\n
+1. when do parallel in v1.4, this aggregation shouldn't work
+so need a new way to aggregate later\n
 
 
 
@@ -148,7 +148,7 @@ class CrawlerDataProcesser:
 
             user_comment['product_items']= models # puts models aka SKUs in
 
-        #todo: when do parallel in v1.3, this aggregation shouldn't work
+        #todo: when do parallel in v1.4, this aggregation shouldn't work
         #so need a new way to aggregate later
         product_comments_container = pd.concat([product_comments_container, user_comment], \
             axis= 0)
@@ -206,7 +206,7 @@ class CrawlerDataProcesser:
 
 
 class ShopeeAsyncCrawlerDataProcesser:
-    """test"""
+    """This class provides the data process functionality for async version"""
 
     def __init__(self, data_source:str) -> None:
         self.data_source = data_source
@@ -217,15 +217,17 @@ class ShopeeAsyncCrawlerDataProcesser:
         #self.product_items_container = pd.DataFrame()
         self.product_comments_container = pd.DataFrame()
 
-    def parse_search_indexs(self,text):
-        """ test """
+    def parse_search_indexs(self,text:str) -> List[Dict[str, Any]]:
+        """ parse the scarped index data by transferring to json """
+
         soup = BeautifulSoup(text, "lxml")
         getjson=json.loads(soup.text)
         mylogger.debug("parse_search_indexs succeeds")
         return getjson['items']
 
-    def parse_good_info(self,text):
-        """ test """
+    def parse_good_info(self,text:str) -> List[Dict[str, Any]]:
+        """ parse the scarped index data by transferring to json """
+
         processed_goods = text.replace("\\n","^n")
         processed_goods = processed_goods.replace("\\t","^t")
         processed_goods = processed_goods.replace("\\r","^r")
@@ -233,8 +235,9 @@ class ShopeeAsyncCrawlerDataProcesser:
         mylogger.debug("parse_good_info succeeds")
         return goods_json
 
-    def parse_good_comments(self,text):
-        """ test """
+    def parse_good_comments(self,text:str) -> List[Dict[str, Any]]:
+        """ parse the scarped comment data by transferring to json """
+
         processed_comments_results= text.replace("\\n","^n")
         processed_comments_results=processed_comments_results.replace("\\t","^t")
         processed_comments_results=processed_comments_results.replace("\\r","^r")
@@ -243,8 +246,16 @@ class ShopeeAsyncCrawlerDataProcesser:
         return comments_json['comments']
 
 
-    def process_raw_search_index(self, result:list) -> pd.DataFrame:
-        """ test """
+    def process_raw_search_index(self, result:List[Dict[str, Any]]) -> pd.DataFrame:
+        """process the raw shopee search data from its api
+
+            Args:
+                result:List[[Dict[str, Any]]]: raw data scrapped from shopee\n
+
+            Returns:
+                product_items (pd.DataFrame): search index data
+
+        """
         product_items = {}
         #try:
         if not isinstance(result, NameError) and result:
@@ -259,14 +270,17 @@ class ShopeeAsyncCrawlerDataProcesser:
 
         return product_items
 
-    def clean_product_data(self):
-        """ test """
+    def clean_product_data(self) -> None:
+        """ clean the three list of collecting product detail """
         self.product_articles= []
         self.product_sku= []
         self.product_tags = []
 
-    def extract_product_data(self, product:dict) -> None:
-        """ test """
+    def extract_product_data(self, product:Dict[str,Any]) -> None:
+        """ extract 'description', 'models' and 'hashtag_list' and append them into lists
+           for later pd concatenation
+
+        """
         try:
             if product['item']:
                 if product['item']['description']:
@@ -291,12 +305,12 @@ class ShopeeAsyncCrawlerDataProcesser:
 
 
         except KeyError as error:
-            mylogger.warning('I got a KeyError - reason "%s"' % str(error))
+            mylogger.warning('I got a KeyError - reason %s', str(error))
             self.product_articles.append('na')
             self.product_sku.append('na')
             self.product_tags.append('na')
         except TypeError as error:
-            mylogger.warning('I got a TypeError - reason "%s"' % str(error))
+            mylogger.warning('I got a TypeError - reason %s',  str(error))
             self.product_articles.append('na')
             self.product_sku.append('na')
             self.product_tags.append('na')
@@ -304,7 +318,7 @@ class ShopeeAsyncCrawlerDataProcesser:
 
     def aggregate_product_data(self, product_items_container: pd.DataFrame, \
         product_items: pd.DataFrame) -> pd.DataFrame:
-        """ test """
+        """ it accumulates three items for a page and then aggregate into a df """
 
         #for debug
         #global debug_list_1
@@ -319,8 +333,11 @@ class ShopeeAsyncCrawlerDataProcesser:
             axis=0)
         return product_items_container
 
-    def update_comment_data(self, comment) -> pd.DataFrame:
-        """ test """
+    def update_comment_data(self, comment:List[Dict[str, Any]]) -> pd.DataFrame:
+        """ extract 'model_name' from the column of 'product_items' and then just replace
+           'product_items' with the extraction and then concat with the comment container
+
+        """
         #mydebug_list.append(comment)
         if not comment:
             user_comment = pd.DataFrame()

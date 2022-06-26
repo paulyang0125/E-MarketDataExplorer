@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Paul Yang and Kana Kunikata
-# Created Date: 24/05/2022
-# version ='1.1'
+# Created Date: 24/06/2022
+# version ='1.3'
 # ---------------------------------------------------------------------------
 
 """This module provides the Shopee Data Crawler functionality.
@@ -11,12 +11,11 @@
 Todo:\n
 1. very ugly codes too many if-else and for-loop, need to refactor\n
 2. move the following jobs to config.py or data_builder.py\n
-3. should use dynamic to represent data_source, not 'shopee'
+3. should dynamically represent data_source, not 'shopee'.\n
 
 
 """
 # shopee_data_explorer/shopee_crawler.py
-import time
 import ast
 import configparser
 from pathlib import Path
@@ -24,11 +23,8 @@ import json
 import logging
 import random
 #from threading import TIMEOUT_MAX
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Dict, List
 from bs4 import BeautifulSoup
-
-
-from seleniumwire import webdriver
 import requests
 from emarket_data_explorer.classtype import CrawlerHandler
 from emarket_data_explorer import (READ_INDEX_ERROR, \
@@ -38,7 +34,7 @@ from emarket_data_explorer.datatype import CrawlerResponse, CrawlerResponseForDi
 
 
 ############# LOGGING #############
-#logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
+# logging.basicConfig(level=logging.WARNING, datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
 # #logger.setLevel(logging.WARNING)  # or any variant from ERROR, CRITICAL or NOTSET

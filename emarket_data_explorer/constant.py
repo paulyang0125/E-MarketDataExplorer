@@ -9,8 +9,6 @@
 """This module provides the Shopee Data constant.
 
 Todo:\n
-1.
-
 
 """
 # shopee_data_explorer/constant.py

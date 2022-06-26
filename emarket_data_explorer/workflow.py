@@ -8,18 +8,15 @@
 
 """This module provides the workflow functionality.
 
-
 Todo:\n
-1.
 
 
 """
 # shopee_data_explorer/workflow.py
 
 from abc import ABC
+from typing import Dict, List, Any, Tuple
 import asyncio
-from typing import Any, Dict, List, NamedTuple, Tuple
-import logging
 import time
 
 
@@ -32,7 +29,7 @@ class WorkFlow(ABC):
 class ShopeeAsyncWorkFlow(WorkFlow):
     """ the implementation of workflow for shopee async io"""
 
-    def do_workflow_all(self,**kwargs):
+    def do_workflow_all(self,**kwargs:Dict[str,Any]) -> Tuple[Dict[str,Any], List[int]]:
     #def do_workflow_all(self,keyword,num_of_product,\
     # page_length,data_source,ip_addresses,proxy_auth,header):
         """ workflow for all """
@@ -95,7 +92,7 @@ class ShopeeAsyncWorkFlow(WorkFlow):
 
 
 
-    def do_workflow_product_info(self,**kwargs):
+    def do_workflow_product_info(self,**kwargs:Dict[str,Any]) -> Tuple[Dict[str,Any], List[int]]:
         """ workflow for product info """
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
@@ -126,7 +123,7 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         # }
         # return (scraper_response, result[3])
 
-    def do_workflow_product_comment(self,**kwargs):
+    def do_workflow_product_comment(self,**kwargs:Dict[str,Any]) -> Tuple[Dict[str,Any], List[int]]:
         """ workflow for comment """
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
@@ -161,7 +158,7 @@ class ShopeeAsyncWorkFlow(WorkFlow):
 
         #return result
 
-    def do_workflow_product_index(self,**kwargs):
+    def do_workflow_product_index(self,**kwargs:Dict[str,Any]) -> Tuple[Dict[str,Any], List[int]]:
         """ workflow for the index """
         start_time = time.time()
         #shopee_handler = ShopeeAsyncCrawlerHandler(ip_addresses=kwargs['ip_addresses'],\
@@ -187,7 +184,6 @@ class ShopeeAsyncWorkFlow(WorkFlow):
         }
 
         return (scraper_response, read.errors)
-
 
         # scraper_response = {
         #     "ids_pool":result[0],

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Paul Yang and Kana Kunikata
-# Created Date: 24/05/2022
-# version ='1.1'
+# Created Date: 25/06/2022
+# version ='1.3'
 # ---------------------------------------------------------------------------
 
 """This module provides the database functionality.
@@ -11,7 +11,9 @@
 
 Todo:\n
 1. use data_source to dynamically update, not hardcoded "shopee"\n
-2. implement write_index and read_index and List cli command.
+2. implement write_index and read_index and List cli command in v1.5.\n
+3. remove unused datatype and also move it to the datatype file v1.4. \n
+4. abstract a DatabaseHandler class and rename to ShopeeDatabaseHandler in v1.4. \n
 
 
 """
@@ -42,10 +44,6 @@ mylogger.addHandler(fh)
 
 
 
-
-
-
-
 # todo: use data_source to dynamically update, not "shopee"
 DEFAULT_DB_FILE_PATH = Path.home().joinpath( "Shopee_Data" + '/' +
     "." + Path.home().stem + "_explorer_db.json"
@@ -55,6 +53,7 @@ Path.home().joinpath(
     "Shopee_Data"
 )
 
+#todo: remove unused datatype and also move it to the datatype file
 class DBResponseForIndex(NamedTuple):
     """this class defines the format of database response for index in JSON"""
     response: List[Dict[str, Any]]
@@ -65,6 +64,7 @@ class DBResponseForCSV(NamedTuple):
     response: pd.DataFrame
     error: int
 
+#todo: abstract a DatabaseHandler class and rename to ShopeeDatabaseHandler
 class DatabaseHandler:
     """this class provides the functions of read and write into CSV and JSON for scrapped data
     """
@@ -94,13 +94,15 @@ class DatabaseHandler:
             source = DATA_SOURCES[data_source]
             file_name = f'{source}_{my_keyword}_{crawler_mode}.csv'
             product_container.to_csv(file_name,encoding = 'utf-8-sig')
-            mylogger.info(f"the container has wrote into {file_name} in {self._data_path}")
+            mylogger.info("the container has wrote into %s in %s",\
+                file_name, self._data_path )
             os.chdir(self.owd)
             return DBResponseForCSV(product_container.head(5), SUCCESS)
         except OSError:  # Catch file IO problems
             os.chdir(self.owd)
             return DBResponseForCSV(pd.DataFrame.empty, CSV_WRITE_ERROR)
 
+    #todo: implement write_index and read_index and List cli command in v1.5
     def write_index(self,product_items:pd.DataFrame) -> DBResponseForIndex:
         """write the search index data into JSON"""
         res_list = []
@@ -116,7 +118,10 @@ class DatabaseHandler:
         except OSError:  # Catch file IO problems
             return DBResponseForIndex(res_list, DB_WRITE_ERROR)
 
+
 class ShopeeAsyncDatabaseHandler:
+    """this class provides the functions of read and write into CSV and JSON for scrapped data
+    """
 
     def __init__(self, data_path: Path, db_path: Path) -> None:
         self.owd = os.getcwd()
@@ -131,9 +136,11 @@ class ShopeeAsyncDatabaseHandler:
             source = DATA_SOURCES[data_source]
             file_name = f'{source}_{my_keyword}_{crawler_mode}.csv'
             #product_container = product_container.replace(r'\r+|\n+|\t+','', regex=True)
-            #product_container.replace(to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"], value=["",""], regex=True, inplace=True)
+            #product_container.replace(to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"],\
+            # value=["",""], regex=True, inplace=True)
             product_container.to_csv(file_name,encoding = 'utf-8-sig')
-            mylogger.info(f"the container has wrote into {file_name} in {self._data_path}")
+            mylogger.info("the container has wrote into %s in %s",\
+                file_name, self._data_path )
             os.chdir(self.owd)
             return SUCCESS
         except OSError:  # Catch file IO problems
