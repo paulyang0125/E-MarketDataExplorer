@@ -27,7 +27,7 @@ from emarket_data_explorer.classtype import CrawlerHandler
 import emarket_data_explorer
 from emarket_data_explorer import (MODES, READ_INDEX_ERROR)
 from emarket_data_explorer.datatype import AsyncCrawlerResponse
-from emarket_data_explorer.data_process import CrawlerDataProcesser
+from emarket_data_explorer.data_process import ShopeeAsyncCrawlerDataProcesser
 
 ### logger
 mylogger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
     """ this provides crawler capabilities to read data from shopee """
 
     def __init__(self, ip_addresses:List[str],proxy_auth:str,header:Dict[str,Any],\
-        data_handler:CrawlerDataProcesser) -> None:
+        data_handler:ShopeeAsyncCrawlerDataProcesser) -> None:
         super().__init__(ip_addresses,proxy_auth)
         self.header = header
         self.timeout = 25
@@ -65,7 +65,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         self.data_path = os.chdir(os.getcwd()) #will remove
 
     async def _fetch(self, session:aiohttp.ClientSession, url:str,\
-        parsing_func:CrawlerDataProcesser) -> List[Dict[str, Any]]:
+        parsing_func:ShopeeAsyncCrawlerDataProcesser) -> List[Dict[str, Any]]:
         """ fetch data from url using the aiohttp session with the parsing functions """
 
         aio_proxies = self._rotate_ip()
@@ -110,7 +110,7 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
             tries += 1
 
     async def _download_all_sites(self, sites:List[str],\
-         parse_func:CrawlerDataProcesser) -> List[List[Dict[str, Any]]]:
+         parse_func:ShopeeAsyncCrawlerDataProcesser) -> List[List[Dict[str, Any]]]:
         """ this is distributor function of async task to feed _fetch func """
         results = []
         async with aiohttp.ClientSession() as session:
