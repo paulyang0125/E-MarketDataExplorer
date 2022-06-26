@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------------
 # Created By  : Paul Yang and Kana Kunikata
-# Created Date: 24/06/2022
-# version ='1.3'
+# Created Date: 26/06/2022
+# version ='1.3.1'
 # ---------------------------------------------------------------------------
 
 """pytest for unit test and acceptance test"""
@@ -18,6 +18,8 @@ from emarket_data_explorer import (
     __version__,
     SUCCESS,
     ALL,
+    PRODUCT_INDEXES,
+    PRODUCT_ITEMS,
     PRODUCT_COMMENTS,
     # PRODUCT_ITEMS,
     SHOPEE,
@@ -53,296 +55,251 @@ def test_init_over_cli() -> None:
     assert result.exit_code == 0
     print(result.output)
 
-test_data1 = {
+############# test parameters ##############
+
+
+
+test_data1_1 = {
     "keyword": "籃球鞋",
-    "ip_addresses": constant.DEFAULT_IP_RANGES,
-    "proxy_auth": constant.DEFAULT_PROXY_AUTH,
-    "header": constant.DEFAULT_HEADER,
-    "path": constant.DEFAULT_CHROME_WEBDRIVER,
-    "page_num": 1,
-    # "page_length":10,
-    "read_index": {
-        "keyword": "籃球鞋",
-        "page_num": 1,
-        # "page_length":10,
-        "obtained_index_num": 5,
-    }
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":ALL,
+    "data_source":SHOPEE,
 }
 
-test_data2 = {
+test_data1_2 = {
+    "keyword": "籃球鞋",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_ITEMS,
+    "data_source":SHOPEE,
+}
+
+test_data1_3 = {
+    "keyword": "籃球鞋",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_COMMENTS,
+    "data_source":SHOPEE,
+}
+
+test_data1_4 = {
+    "keyword": "籃球鞋",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_INDEXES,
+    "data_source":SHOPEE,
+}
+test_data2_1 = {
     "keyword": "運動內衣",
-    "ip_addresses": constant.DEFAULT_IP_RANGES,
-    "proxy_auth": constant.DEFAULT_PROXY_AUTH,
-    "header": constant.DEFAULT_HEADER,
-    "webdriver_path": constant.DEFAULT_CHROME_WEBDRIVER,
-    "page_num": 2,
-    "page_length": 5,
-    "read_index": {
-        "keyword": "運動內衣",
-        "page_num": 2,
-        "page_length": 5,
-        "obtained_index_num": 10
-    }
+    "num_of_product": 50,
+    "page_length":50,
+    "mode":ALL,
+    "data_source":SHOPEE,
 }
 
-'''
-@pytest.mark.parametrize(
- "keyword,ip_addresses,proxy_auth,header,webdriver_path,page_num,page_length,expected",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            test_data2["ip_addresses"],
-            test_data2["proxy_auth"],
-            test_data2["header"],
-            test_data2["webdriver_path"],
-            test_data2["page_num"],
-            test_data2["page_length"],
-            (test_data2["read_index"],SUCCESS)
-        ),
-
-    ]
-)
-
-'''
-
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length,data_source, expected",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            test_data2["page_num"],
-            test_data2["page_length"],
-            SHOPEE,
-             (test_data2["read_index"], SUCCESS),
-        ),
-
-    ]
-)
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_read_index_api(keyword, page_num, page_length, data_source,expected):
-    """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
-    explorer = get_explorer(data_source)
-    print("==expected: " + str(expected))
-    actual = explorer.read_index_api(keyword, page_num, page_length)
-    print("==actual: ", str(actual))
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "keyword,page_num,data_source,expected",
-    [
-        pytest.param(
-            test_data1["keyword"],
-            test_data1["page_num"],
-            SHOPEE,
-            (test_data1["read_index"], SUCCESS)
-        ),
-
-    ]
-)
-
-#@pytest.mark.skip(reason="since this test takes long time, skip first until v1.5 starts")
-def test_read_index_selenium(keyword, page_num, data_source, expected):
-    """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
-    explorer = get_explorer(data_source)
-    print("==expected: " + str(expected))
-    actual = explorer.read_index_selenium(keyword, page_num)
-    print("==actual: ", str(actual))
-    assert actual == expected
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length,data_source,expected",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            test_data2["page_num"],
-            test_data2["page_length"],
-            SHOPEE,
-            test_data2["page_num"] * test_data2["page_length"],
-        ),
-
-    ]
-)
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_read_index(keyword, page_num, page_length, data_source, expected):
-    """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
-    explorer = get_explorer(data_source)
-    actual = explorer.read_index(keyword,page_num,page_length)
-    assert actual.error == 0
-    assert len(actual.scraping_info) == expected
-
-
-test_data3 = {
-    "item_id": 16439834350,"shop_id":555952616
+test_data2_2 = {
+    "keyword": "運動內衣",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_ITEMS,
+    "data_source":SHOPEE,
 }
 
-test_data4 = {
-    "item_id": 9488303342,"shop_id":267479790
+test_data2_3 = {
+    "keyword": "運動內衣",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_COMMENTS,
+    "data_source":SHOPEE,
 }
 
-@pytest.mark.parametrize(
-    "shop_id,item_id,data_source,expected",
-        [
-        pytest.param(
-            test_data3["shop_id"],
-            test_data3["item_id"],
-            SHOPEE,
-            test_data3["item_id"],
-        ),
-        pytest.param(
-            test_data4["shop_id"],
-            test_data4["item_id"],
-            SHOPEE,
-            test_data4["item_id"],
-        ),
+test_data2_4 = {
+    "keyword": "運動內衣",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":PRODUCT_INDEXES,
+    "data_source":SHOPEE,
+}
+
+test_data3_1 = {
+    "keyword": "男性皮夾",
+    "num_of_product": 100,
+    "page_length":50,
+    "mode":ALL,
+    "data_source":SHOPEE,
+}
 
 
-    ]
-)
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_read_good_details(shop_id, item_id, data_source, expected):
-    """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
-    explorer = get_explorer(data_source)
-    actual = explorer.read_good_details(shop_id=shop_id, item_id=item_id)
-    #print("test_read_good_details: autual - " , str(actual))
-    assert actual.error == 0
-    #assert actual.scraping_info['description']
-    assert actual.scraping_info['item']['itemid'] == expected
+
+############# scrap ##############
+
+
 
 @pytest.mark.parametrize(
-    "shop_id,item_id,data_source,expected",
-        [
-        pytest.param(
-            test_data3["shop_id"],
-            test_data3["item_id"],
-            SHOPEE,
-            test_data3["item_id"],
-        ),
-        pytest.param(
-            test_data4["shop_id"],
-            test_data4["item_id"],
-            SHOPEE,
-            test_data4["item_id"],
-        ),
-
-
-    ]
-)
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_read_good_comments(shop_id, item_id, data_source,expected):
-    """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
-    explorer = get_explorer(data_source)
-    actual = explorer.read_good_comments(shop_id=shop_id, item_id=item_id)
-
-    #print("test_read_good_comments: actual - " , str(actual))
-    assert actual.error == 0
-    #assert actual.scraping_info['product_items']
-    assert actual.scraping_info[0]['itemid'] == expected
-
-@pytest.mark.parametrize(
-    "keyword,num_of_product,mode,page_length,data_source,expected",
+    #"keyword,num_of_product,mode,page_length,data_source,expected",
+    "keyword,num_of_product,mode,page_length,data_source",
     [
         pytest.param(
-            test_data2["keyword"],
-            20,
-            ALL,
-            10,
-            SHOPEE,
-            20,
+            test_data1_1["keyword"],
+            test_data1_1["num_of_product"],
+            test_data1_1["mode"],
+            test_data1_1["page_length"],
+            test_data1_1["data_source"],
+            #test_data1_1["num_of_product"],
         ),
-        # pytest.param(
-        #     test_data2["keyword"],
-        #     20,
-        #     PRODUCT_ITEMS,
-        #     10,
-        #     SHOPEE,
-        #     20,
-        # ),
-        # pytest.param(
-        #     test_data2["keyword"],
-        #     10,
-        #     PRODUCT_COMMENTS,
-        #     10,
-        #     SHOPEE,
-        #     10,
-        # ),
+
+        pytest.param(
+            test_data2_1["keyword"],
+            test_data2_1["num_of_product"],
+            test_data2_1["mode"],
+            test_data2_1["page_length"],
+            test_data2_1["data_source"],
+            #test_data2_1["num_of_product"],
+        ),
 
     ]
 )
 
-#shopee_data_explorer.Explorer(data_path,db_path,ip_addresses,proxy_auth,my_header,\
-#            webdriver_path, int(data_source))
 
 #@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap(keyword, num_of_product, mode,page_length, data_source, expected):
+def test_scrap_async(keyword, num_of_product, mode, page_length, data_source):
     """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
     explorer = get_explorer(data_source)
-    actual = explorer.scrap(keyword=keyword, num_of_product=num_of_product,mode=mode,\
+    result = explorer.scrap_async(keyword=keyword, num_of_product=num_of_product,mode=mode,\
         page_length=page_length)
-    assert actual.error == 0
-    if mode != PRODUCT_COMMENTS:
-        assert actual.scraping_info["obtained_product_num"] == expected
-    else:
-        assert actual.scraping_info["obtained_comment_num"] >= expected
+    print(result[1])
+    assert SUCCESS in result[1]
 
 
 
 
 
 
+@pytest.mark.parametrize(
+    #"keyword,num_of_product,mode,page_length,data_source,expected",
+    "keyword,num_of_product,mode,page_length",
+    [
+        pytest.param(
+            test_data3_1["keyword"],
+            str(test_data3_1["num_of_product"]),
+            test_data3_1["mode"],
+            str(test_data3_1["page_length"]),
+        ),
+
+    ]
+)
 
 
 #@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_over_cli():
-    """ validate the scrap cli output"""
-    result = runner.invoke(cli.app, ["scrap","運動內衣","30","30"])
-    assert result.exit_code == 0
+def test_scrap_async_all_over_cli(keyword,num_of_product,page_length,mode) -> None:
+    "test"
+    #result = runner.invoke(cli.app, ["scrap-async",keyword,page_num, '-ve', 1])
+    result = runner.invoke(cli.app, ["scrap-async",keyword,num_of_product,'-sm', mode])
+    #result = runner.invoke(cli.app, ["scrap-async","運動內衣","100","50"])
+    print(result.exit_code)
+    print(type(result.exit_code))
+    #assert result.exit_code == 0
     print(result.stdout)
-    assert "運動內衣" and "50" in result.stdout
+    print(type(result.stdout))
+    #sample stdout: explorer: "運動內衣" was searched and collected \
+    # successfully with options: page_num 100 and page_length 50
+    assert keyword and num_of_product and page_length in result.stdout
 
 
 
+
+@pytest.mark.parametrize(
+    #"keyword,num_of_product,mode,page_length,data_source,expected",
+    "keyword,num_of_product,mode,page_length",
+    [
+        pytest.param(
+            test_data1_2["keyword"],
+            str(test_data1_2["num_of_product"]),
+            test_data1_2["mode"],
+            str(test_data1_2["page_length"]),
+        ),
+
+    ]
+)
+
+
+#@pytest.mark.skip(reason="tested, skip first to save time")
+def test_scrap_async_product_over_cli(keyword,num_of_product,page_length,mode) -> None:
+    "test"
+
+    result = runner.invoke(cli.app, ["scrap-async",keyword,num_of_product,page_length,'-sm', mode])
+    print(result.exit_code)
+    print(type(result.exit_code))
+    #assert result.exit_code == 0
+    print(result.stdout)
+    print(type(result.stdout))
+    #sample stdout: explorer: "運動內衣" was searched and collected \
+    # successfully with options: page_num 100 and page_length 50
+    assert keyword and num_of_product and page_length in result.stdout
+
+
+@pytest.mark.parametrize(
+    "keyword,num_of_product,mode,page_length",
+    [
+        pytest.param(
+            test_data1_3["keyword"],
+            str(test_data1_3["num_of_product"]),
+            test_data1_3["mode"],
+            str(test_data1_3["page_length"]),
+        ),
+
+    ]
+)
+
+
+#@pytest.mark.skip(reason="tested, skip first to save time")
+def test_scrap_async_comment_over_cli(keyword,num_of_product,page_length, mode) -> None:
+    "test"
+
+    result = runner.invoke(cli.app, ["scrap-async",keyword,num_of_product,\
+        page_length,'--scrap_mode_for_shopee', mode])
+    print(result.exit_code)
+    print(type(result.exit_code))
+    #assert result.exit_code == 0
+    print(result.stdout)
+    print(type(result.stdout))
+    #sample stdout: explorer: "運動內衣" was searched and collected successfully \
+    # with options: page_num 100 and page_length                 50
+    assert keyword and num_of_product and page_length in result.stdout
+
+
+@pytest.mark.parametrize(
+    "keyword,num_of_product,mode,page_length",
+    [
+        pytest.param(
+            test_data1_4["keyword"],
+            str(test_data1_4["num_of_product"]),
+            test_data1_4["mode"],
+            str(test_data1_4["page_length"]),
+        ),
+
+    ]
+)
+
+#@pytest.mark.skip(reason="tested, skip first to save time")
+def test_scrap_async_index_over_cli(keyword,num_of_product,page_length,mode) -> None:
+    "test"
+    result = runner.invoke(cli.app, ["scrap-async",keyword,num_of_product,page_length,\
+        '--scrap_mode_for_shopee', mode])
+    print(result.exit_code)
+    print(type(result.exit_code))
+    #assert result.exit_code == 0
+    print(result.stdout)
+    print(type(result.stdout))
+    #sample stdout: explorer: "運動內衣" was searched and collected successfully with \
+    # options: page_num 100 and page_length                 50
+    assert keyword and num_of_product and page_length in result.stdout
+
+
+
+############  eda ################
 
 @pytest.mark.parametrize(
     "product_comment_name,product_csv_name,data_source",
@@ -366,12 +323,6 @@ def test_scrap_over_cli():
 #@pytest.mark.skip(reason="tested, skip first to save time")
 def test_do_eda(product_csv_name,product_comment_name, data_source):
     """test"""
-    # explorer = shopee_data_explorer.Explorer(data_path=constant.DEFAULT_DATA_PATH, \
-    #      db_path=constant.DEFAULT_DB_FILE_PATH,\
-    #     ip_addresses=constant.DEFAULT_IP_RANGES,\
-    #      proxy_auth=constant.DEFAULT_PROXY_AUTH,my_header=constant.DEFAULT_HEADER,\
-    #           webdriver_path=constant.DEFAULT_CHROME_WEBDRIVER,\
-    #               data_source=data_source)
     explorer = get_explorer(data_source)
     result, error = explorer.do_eda(product_csv_name,product_comment_name)
     assert error == 0
@@ -381,12 +332,12 @@ def test_do_eda(product_csv_name,product_comment_name, data_source):
 @pytest.mark.parametrize(
     "product_comment_name,product_csv_name,data_source",
     [
-        # pytest.param(
-        #     "shopee_運動內衣_product_comments.csv",
-        #     "shopee_運動內衣_product_goods.csv",
-        #     SHOPEE,
+        pytest.param(
+            "shopee_籃球鞋_product_comments.csv",
+            "shopee_籃球鞋_product_goods.csv",
+            SHOPEE,
 
-        # ),
+        ),
         pytest.param(
             "shopee_男性皮夾_product_comments.csv",
             "shopee_男性皮夾_product_goods.csv",
@@ -412,173 +363,3 @@ def test_eda_over_cli(product_csv_name,product_comment_name,data_source):
     assert data_path.joinpath("figure5.png").exists()
     assert data_path.joinpath("figure6.png").exists()
     assert data_path.joinpath(f"{DATA_SOURCES[data_source]}_eda_report.html").exists()
-
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            str(test_data2["page_num"]),
-            str(test_data2["page_length"]),
-
-        ),
-
-    ]
-)
-# todo: somehow assert result.exit_code == 0 reports failed and also complain int call len()
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_read_search_over_cli(keyword,page_num,page_length) -> None:
-    "test"
-    result = runner.invoke(cli.app, ["read-search",keyword,page_num,page_length,\
-         '--searcher_type',1])
-    print(result.exit_code)
-    print(type(result.exit_code))
-    #assert result.exit_code == 0
-    print(result.output)
-
-
-
-
-
-@pytest.mark.parametrize(
-    "keyword,num_of_product,mode,page_length,data_source,expected",
-    [
-        pytest.param(
-            test_data1["keyword"],
-            100,
-            PRODUCT_COMMENTS,
-            50,
-            SHOPEE,
-            100,
-        ),
-        pytest.param(
-            test_data1["keyword"],
-            100,
-            ALL,
-            50,
-            SHOPEE,
-            100,
-        ),
-
-    ]
-)
-
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_async(keyword, num_of_product, mode, page_length, data_source, expected):
-    """test"""
-    explorer = get_explorer(data_source)
-    result = explorer.scrap_async(keyword=keyword, num_of_product=num_of_product,mode=mode,\
-        page_length=page_length)
-    print(result[1])
-    assert SUCCESS in result[1]
-
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            '100',
-            '50',
-
-        ),
-
-    ]
-)
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_async_all_over_cli(keyword,page_num,page_length) -> None:
-    "test"
-    #result = runner.invoke(cli.app, ["scrap-async",keyword,page_num, '-ve', 1])
-    result = runner.invoke(cli.app, ["scrap-async",keyword,page_num])
-    #result = runner.invoke(cli.app, ["scrap-async","運動內衣","100","50"])
-    print(result.exit_code)
-    print(type(result.exit_code))
-    #assert result.exit_code == 0
-    print(result.stdout)
-    print(type(result.stdout))
-    #sample stdout: explorer: "運動內衣" was searched and collected successfullywith options: page_num 100 and page_length                 50
-    assert keyword and page_num and page_length in result.stdout
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            '100',
-            '50',
-
-        ),
-
-    ]
-)
-
-
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_async_product_over_cli(keyword,page_num,page_length) -> None:
-    "test"
-
-    result = runner.invoke(cli.app, ["scrap-async",keyword,page_num,page_length,'-sm', 2])
-    print(result.exit_code)
-    print(type(result.exit_code))
-    #assert result.exit_code == 0
-    print(result.stdout)
-    print(type(result.stdout))
-    #sample stdout: explorer: "運動內衣" was searched and collected successfullywith options: page_num 100 and page_length                 50
-    assert keyword and page_num and page_length in result.stdout
-
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            '100',
-            '50',
-
-        ),
-
-    ]
-)
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_async_comment_over_cli(keyword,page_num,page_length) -> None:
-    "test"
-
-    result = runner.invoke(cli.app, ["scrap-async",keyword,page_num,page_length,'--scrap_mode_for_shopee', 3])
-    print(result.exit_code)
-    print(type(result.exit_code))
-    #assert result.exit_code == 0
-    print(result.stdout)
-    print(type(result.stdout))
-    #sample stdout: explorer: "運動內衣" was searched and collected successfullywith options: page_num 100 and page_length                 50
-    assert keyword and page_num and page_length in result.stdout
-
-@pytest.mark.parametrize(
-    "keyword,page_num,page_length",
-    [
-        pytest.param(
-            test_data2["keyword"],
-            '100',
-            '50',
-
-        ),
-
-    ]
-)
-
-#@pytest.mark.skip(reason="tested, skip first to save time")
-def test_scrap_async_index_over_cli(keyword,page_num,page_length) -> None:
-    "test"
-    result = runner.invoke(cli.app, ["scrap-async",keyword,page_num,page_length,\
-        '--scrap_mode_for_shopee', 4])
-    print(result.exit_code)
-    print(type(result.exit_code))
-    #assert result.exit_code == 0
-    print(result.stdout)
-    print(type(result.stdout))
-    #sample stdout: explorer: "運動內衣" was searched and collected successfullywith \
-    # options: page_num 100 and page_length                 50
-    assert keyword and page_num and page_length in result.stdout

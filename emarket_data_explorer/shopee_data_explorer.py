@@ -23,20 +23,15 @@ import logging
 import platform
 import pandas as pd
 from matplotlib.font_manager import FontProperties
-from tqdm import tqdm
-from emarket_data_explorer import MODES, CSV_WRITE_ERROR,READ_INDEX_ERROR, READ_PRODUCT_ERROR,\
-    READ_COMMENT_ERROR, SUCCESS, EDA_ERROR
+from emarket_data_explorer import SUCCESS, EDA_ERROR
 import emarket_data_explorer
 from emarket_data_explorer import shopee_eda
-from emarket_data_explorer.database import DatabaseHandler
-from emarket_data_explorer.shopee_crawler import ShopeeCrawlerHandler
-from emarket_data_explorer.shopee_selenium_crawler import ShopeeSeleniumCrawlerHandler
-from emarket_data_explorer.data_process import CrawlerDataProcesser
+
 from emarket_data_explorer.shopee_eda import ShopeeEDA
 from emarket_data_explorer.shopee_async_crawler import ShopeeAsyncCrawlerHandler
 from emarket_data_explorer.data_process import ShopeeAsyncCrawlerDataProcesser
 from emarket_data_explorer.database import ShopeeAsyncDatabaseHandler
-from emarket_data_explorer.datatype import ScrapingInfo, ScrapingInfoForList
+from emarket_data_explorer.datatype import ScrapingInfo
 from emarket_data_explorer.workflow import ShopeeAsyncWorkFlow
 from emarket_data_explorer.classtype import Explorer
 
@@ -65,14 +60,15 @@ class ShopeeExplorer(Explorer):
         #print("1. header type: " + str(type(header)))
         #print("1. header items: " + str(header.items))
 
-        self._crawler_handler = ShopeeCrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
-            kwargs['my_header'],kwargs['webdriver_path'])
+        ### remove ###
 
-        self._selenium_crawler_handler = ShopeeSeleniumCrawlerHandler(kwargs['ip_addresses'],kwargs['proxy_auth'],\
-            kwargs['my_header'],kwargs['webdriver_path'])
 
-        self._data_processor = CrawlerDataProcesser(kwargs['data_source'])
-        self._db_handler = DatabaseHandler(kwargs['data_path'],kwargs['db_path'])
+        ### remove ###
+
+
+        ### remove ###
+
+        ### remove ###
 
         self._shopee_async_data_processor = ShopeeAsyncCrawlerDataProcesser(kwargs['data_source'])
         self._shopee_async_db_handler = ShopeeAsyncDatabaseHandler(kwargs['data_path']\
@@ -87,119 +83,18 @@ class ShopeeExplorer(Explorer):
         self.data_path = kwargs['data_path']
         self.data_source = kwargs['data_source']
 
+    ### remove ###
 
-    def read_index_selenium(self, keyword: str,page_num: int) -> ScrapingInfo:
-        """read the index by selenium"""
-        scraper_init = {
-            "keyword":keyword,
-            "page_num": page_num,
-        }
-        read = self._selenium_crawler_handler.read_a_page_selenium_search_indexs(keyword,page_num)
+    ### remove ###
 
-        if read.error == READ_INDEX_ERROR:
-            return ScrapingInfo(scraper_init, read.error)
+    ### remove ###
 
-        self.a_page_product_index=read.result
+    ### remove ###
 
-        scraper_response = {
-            "keyword":keyword,
-            "page_num": page_num,
-            "obtained_index_num":len(self.a_page_product_index),
-        }
-        return ScrapingInfo(scraper_response, read.error)
+    ### remove ###
 
 
-    def read_index_api(self, keyword: str,page_num: int,page_length: int) -> ScrapingInfo:
-        """for testing/debug, read the index by shopee api"""
-        scraper_init = {
-            "keyword":keyword,
-            "page_num": page_num,
-            "page_length":page_length,
-        }
-
-        product_items_container = pd.DataFrame()
-        for page in tqdm(range(page_num)):
-            read = self._crawler_handler.read_search_indexs(keyword,page,page_length)
-            if read.error == READ_INDEX_ERROR:
-                return ScrapingInfo(scraper_init, read.error)
-
-            # todo: move to data process
-            product_items = {}
-            #for i in range(len(read.result)):
-            for count, _ in enumerate(read.result):
-                product_items[count] = read.result[count]['item_basic']
-            product_items=pd.DataFrame(product_items).T
-
-            #product_items_container.append(product_items,ignore_index=True)
-            #pd.concat([product_items_container,product_items], ignore_index=True, \
-            # sort=True, axis=0)
-            product_items_container = pd.concat([product_items_container,product_items],axis=0)
-
-        #product_items=pd.DataFrame(read.result)
-
-        scraper_response = {
-            "keyword":keyword,
-            "page_num": page_num,
-            "page_length":page_length,
-            "obtained_index_num":len(product_items_container['itemid'].tolist()),
-        }
-        return ScrapingInfo(scraper_response, read.error)
-
-    def read_index(self, keyword: str,page_num: int,page_length: int) -> ScrapingInfo:
-        """read the index by shopee api"""
-        scraper_init = {
-            "keyword":keyword,
-            "page_num": page_num,
-            "page_length":page_length,
-        }
-        #product_items_container = pd.DataFrame()
-        product_items = []
-        for page in tqdm(range(page_num)):
-            read = self._crawler_handler.read_search_indexs(keyword,page,page_length)
-            if read.error == READ_INDEX_ERROR:
-                return ScrapingInfo(scraper_init, read.error)
-            # debug
-            #print(Explorer.read_index.__name__, "-read.result: ", str(read.result))
-            #product_items = {key: value for (key, value) in (product_items.items() + \
-            #    read.result.items())}
-            product_items.extend(read.result)
-            #print(Explorer.read_index.__name__,"-product_items: ", str(product_items))
-        #return ScrapingInfo(product_items, read.error)
-        return ScrapingInfoForList(product_items, read.error)
-    #return ScrapingInfo(product_items_container.to_json(), read.error)
-
-
-
-    def read_good_details(self, shop_id: int, item_id: int) -> ScrapingInfo:
-        """read good details by shopee api"""
-        scraper_init = {
-            "shop_id":shop_id,
-            "item_id": item_id,
-        }
-        read = self._crawler_handler.read_good_info(shop_id, item_id)
-        if read.error == READ_PRODUCT_ERROR:
-            return ScrapingInfo(scraper_init, read.error)
-        # debug
-        #print(Explorer.read_good_details.__name__, "-read.result: ", str(read.result))
-        #good_details = process_product_data(read.result)
-
-        return ScrapingInfo(read.result, read.error)
-
-
-    def read_good_comments(self,shop_id: int, item_id: int) -> ScrapingInfoForList:
-        """read good comments by shopee api"""
-        # todo: definte and design the consistent responses between CLI and controller
-        #scraper_init = {
-        #    "shop_id":shop_id,
-        #    "item_id": item_id,
-        #}
-        read = self._crawler_handler.read_good_comments(shop_id, item_id)
-        if read.error == READ_COMMENT_ERROR:
-            #return ScrapingInfoForList(scraper_init, read.error)
-            return ScrapingInfoForList([{}], read.error)
-        #debug
-        #print(Explorer.read_good_comments.__name__, "-read.result: ", str(read.result))
-        return ScrapingInfoForList(read.result, read.error)
+    ### remove ###
 
     def _extract_keyword(self,product_csv_name:str) -> str:
         """ extract keyword from the csv name"""
@@ -256,143 +151,11 @@ class ShopeeExplorer(Explorer):
             #raise sys.exit(1)
             return (read.result,EDA_ERROR)
 
-
-    def scrap(self, keyword: str, num_of_product: int, mode:int, page_length:int\
-            ) -> ScrapingInfo:
-        """the main entry of scrap command that scraps data source with the specified
-           number of the result based on mode suer select.\n
-
-           page length is 50 here by default so suppose user should input multiplier of 50
-           otherwise use floor division that rounds any number down to the nearest integer,
-           so if 256 is given, the page should be 5 that will miss extra 6 items.\n
-
-        """
-        # todo: decouple mode here as it's used for shopee only, not other data sources
-
-        # page length is 50 here by default so suppose user should input multiplier of 50
-        # otherwise use floor division - // rounds any number down to the nearest integer.
-        # so if 256 is given, the page should be 5 that will miss extra 6 items
-
-        #page_length = shopee_crawler.DEFAULT_PAGE_LENGTH
-        #self.keyword = keyword
-        page_num = num_of_product // page_length
-        scraper_init = {
-            "keyword":keyword,
-            "page_num": page_num,
-            "page_length":page_length,
-        }
-        # product_items_container is the aggregator of product data
-        product_items_container = pd.DataFrame()
-        product_comments_container = pd.DataFrame()
-
-        for page in tqdm(range(page_num), position=0, leave=True):
-            read = self._crawler_handler.read_search_indexs(keyword,page,page_length)
-            if read.error == READ_INDEX_ERROR:
-                return ScrapingInfo(scraper_init, read.error)
-            product_items = self._data_processor.process_raw_search_index(read.result)
+    ### remove ###
 
 
-            for index, (item_id, shop_id, name) in tqdm(enumerate(zip(product_items['itemid']\
-                .tolist(),\
-                product_items['shopid'].tolist(),product_items['name'].tolist())),\
-                total=len(product_items['itemid'].tolist()), position=0, leave=True):
+    ### remove ###
 
-                mylogger.info('# %i,scarping %s ...', index, name[:30])
-
-                if mode == emarket_data_explorer.ALL or mode == emarket_data_explorer.\
-                    PRODUCT_ITEMS:
-                    read=self.read_good_details(shop_id = shop_id, item_id=item_id)
-                    # test: fix by ['item']. maybe it's not a better place to put it
-                    product = read.scraping_info['item']
-                    self._data_processor.process_product_data(product)
-
-                if mode == emarket_data_explorer.ALL or mode == emarket_data_explorer.\
-                    PRODUCT_COMMENTS:
-                    read = self.read_good_comments(shop_id = shop_id, item_id=item_id)
-                    comment = read.scraping_info
-                    product_comments_container = self._data_processor.process_comment_data\
-                        (comment,product_comments_container)
-
-            #debug
-            #print("scrapall->container:head", product_items_container.head(5))
-            #print("scrapall->container:tail", product_items_container.tail(5))
-            #print("scrapall->comment_container:head", product_comments_container.head(5))
-            #print("scrapall->comment_container:tail", product_comments_container.tail(5))
-
-            if mode == emarket_data_explorer.ALL or mode == emarket_data_explorer.\
-                    PRODUCT_ITEMS:
-                product_items_container = self._data_processor.aggregate_product_data\
-                    (product_items_container,product_items)
-                self._data_processor.clean_product_data()
-                crawler_mode = MODES[mode]
-                if mode == emarket_data_explorer.ALL:
-                    crawler_mode = crawler_mode.split(':')[0]
-
-                read = self._db_handler.write_csv(product_items_container, keyword,\
-                    self.data_source,crawler_mode)
-
-                if read.error == CSV_WRITE_ERROR:
-                    return ScrapingInfo(read.response.to_dict(), read.error)
-                #self._data_processor.write_shopee_goods_data(product_items_container, keyword)
-            #debug
-            #print("after:scrapall->container:head", product_items_container.head(5))
-            #print("after:scrapall->container:tail", product_items_container.tail(5))
-            if mode == emarket_data_explorer.ALL or mode == emarket_data_explorer.\
-                    PRODUCT_COMMENTS:
-
-                crawler_mode = MODES[mode]
-                if mode == emarket_data_explorer.ALL:
-                    crawler_mode = crawler_mode.split(':')[1]
-
-                read = self._db_handler.write_csv(product_comments_container, keyword,\
-                    self.data_source,crawler_mode)
-                if read.error == CSV_WRITE_ERROR:
-                    return ScrapingInfo(read.response.to_dict(), read.error)
-                #self._data_processor.write_shopee_comments_data(product_comments_container,\
-                #  keyword)
-
-        if mode == emarket_data_explorer.ALL:
-            if not product_items_container.empty and not product_comments_container.empty:
-                scraper_response = {
-                "keyword":keyword,
-                "page_num": page_num,
-                "page_length":page_length,
-                "obtained_product_num":len(product_items_container.index),
-                "obtained_comment_num":len(product_comments_container.index),
-                }
-
-                return ScrapingInfo(scraper_response, read.error)
-            else:
-                print("containers are empty")
-                return ScrapingInfo(scraper_init, read.error)
-
-        elif mode == emarket_data_explorer.PRODUCT_ITEMS:
-            if not product_items_container.empty:
-                scraper_response = {
-                "keyword":keyword,
-                "page_num": page_num,
-                "page_length":page_length,
-                "obtained_product_num":len(product_items_container.index),
-                }
-
-                return ScrapingInfo(scraper_response, read.error)
-            else:
-                print("containers are empty")
-                return ScrapingInfo(scraper_init, read.error)
-
-        elif mode == emarket_data_explorer.PRODUCT_COMMENTS:
-            if not product_comments_container.empty:
-                scraper_response = {
-                "keyword":keyword,
-                "page_num": page_num,
-                "page_length":page_length,
-                "obtained_comment_num":len(product_comments_container.index),
-                }
-
-                return ScrapingInfo(scraper_response, read.error)
-            else:
-                print("containers are empty")
-                return ScrapingInfo(scraper_init, read.error)
 
     def scrap_async(self, keyword: str, num_of_product: int, mode:int,\
         page_length:int) -> ScrapingInfo:

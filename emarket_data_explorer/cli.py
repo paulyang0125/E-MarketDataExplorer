@@ -165,91 +165,10 @@ def _version_callback(value: bool) -> None:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
 
-
-@app.command()
-#input arg -> keyword: str, page_num: int,page_length
-
-def read_search(
-    required_args :List[str] = typer.Argument(
-        ...,
-        help=
-        """
-        Here expects three arguments in sequence \n
-        1. keyword you want to search for \n
-        2. the number of page \n
-        3. the length of page \n
-        The total amount of item to be searched equals
-        the multiplication of the second argument and the third.
-        """
-        ),
-        searcher_type: int = typer.Option(
-        1, "--searcher_type", "-t", min=1, max=2,
-        help="the default is 1 meaning e-market explorer will scrap data over \
-data source API and choosing 2 will use selenium to scrap shopee website",
-        ),
-    # todo: will implement retry by adding the abstract class to decouple the retry mechanism
-    #retry: int = typer.Option(1, "--retry", "-r", min=1, max=5),
-) -> None:
-    """
-    Reads search data from shopee (for debugging). This belongs to \
-the debugging feature which will only read the search results as the index.
-
-    """
-
-    #print(f'inputs are {required_args}, {searcher_type}, {retry}')
-    if searcher_type == 1:
-        if len(required_args) != 3:
-            typer.secho(
-            f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
-        )
-            raise typer.Exit(2)
-        else:
-            keyword = required_args[0]
-            page_num = int(required_args[1])
-            page_length = int(required_args[2])
-            explorer = get_explorer()
-            response, error = explorer.read_index_api(keyword,page_num,page_length)
-            if error:
-                typer.secho(
-                    f'Adding to-do failed with "{ERRORS[error]}"', fg=typer.colors.RED
-                )
-                raise typer.Exit(5)
-            else:
-                typer.secho(
-                    f"""explorer: "{response['keyword']}" was searched """
-                    f"""with options: page_num {response['page_num']} and page_length \
-                        {response['page_length']} """
-                    f"""finally it obtains the number of search result: \
-                        {response['obtained_index_num']} """,
-                    fg=typer.colors.GREEN,
-                )
-
-    elif searcher_type == 2:
-        if len(required_args) != 2:
-            typer.secho(
-            f'{required_args} are invalid for type2 searcher', fg=typer.colors.RED
-        )
-            raise typer.Exit(1)
-        else:
-            keyword = required_args[0]
-            page_num = int(required_args[1])
-            explorer = get_explorer()
-            response, error = explorer.read_index_selenium(keyword,page_num)
-            if error:
-                typer.secho(
-                    f'Adding to-do failed with "{ERRORS[error]}"', fg=typer.colors.RED
-                )
-                raise typer.Exit(1)
-            else:
-                typer.secho(
-                    f"""explorer: "{response['keyword']}" was searched """
-                    f"""with options: page_num {response['page_num']} """
-                    f"""finally it obtains the number of search result: \
-                        {response['obtained_index_num']} """,
-                    fg=typer.colors.GREEN,
-                )
+### remove ###
 
 
+### remove ###
 
 @app.command()
 #input arg -> file1: csv, file2: csv
@@ -297,126 +216,11 @@ def eda(
             fg=typer.colors.GREEN,
         )
 
-
-@app.command()
-#input arg -> keyword: str, num of product: int, page_length: int (optional),
-#DEFAULT_PAGE_LENGTH = 10
-def scrap(
-    required_args :List[str] = typer.Argument(
-        ...,
-        help=
-        """
-        Here expects three inputs in sequence\n
-        1. keyword you want to search for\n
-        2. the number of product\n
-        3. the length of page (optional)\n
-        For example, e-market-data explorer scrap basketball 100
-        """,
-        ),
-    #source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
-    mode: int = typer.Option(
-        1, "--scrap_mode_for_shopee", "-sm", min=1, max=3,
-        help="we have three modes ALL, PRODUCT_ITEMS, PRODUCT_COMMENTS available. user can \
-choose to scrap all two data (product or comment) or both for ALL. the default is 1 for ALL."
-        ),
-    searcher_type: int = typer.Option(
-        1, "--searcher_type", "-st", min=1, max=2,
-        help="he default is 1 meaning e-market explorer will scrap data over \
-Shopee API and choosing another 2 will use selenium to scrap shopee website."
-        ),
-    retry: int = typer.Option(
-        1, "--retry", "-r", min=1, max=5,
-        help="this is not yet supported, we'll target v1.3 to implement."
-        ),
-    verbose_level: int = typer.Option(
-        3, "--verbose", "-ve", min=1, max=3,
-        help="verbose 1 dumps all detailed debugging info, the default 3 just print \
-error message if something bad happens."
-        )
-) -> None:
-    """
-    Scrap commercial data from the data source specified by user
-
-    """
-    if verbose_level == 1:
-        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
-            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
-
-    elif verbose_level == 2:
-        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
-            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
-
-    elif verbose_level == 3:
-        logging.basicConfig(format='%(asctime)s %(message)s',stream=sys.stdout,\
-            datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.FATAL)
+### remove ###
 
 
-    mylogger = logging.getLogger(__name__)
 
-
-    # debug
-    #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, searcher-type - \
-    #    {searcher_type}, retry - {retry}')
-
-    mylogger.debug('inputs are args - %s, mode - %i, searcher-type - \
-        %i, retry - %i, verbose - %i', required_args, mode, searcher_type, \
-            retry, verbose_level)
-
-    if searcher_type == 1:
-        if len(required_args) < 2:
-            typer.secho(
-            f'{required_args} are invalid for type1 searcher', fg=typer.colors.RED
-        )
-            raise typer.Exit(1)
-        else:
-            keyword = required_args[0]
-            num_of_product = int(required_args[1])
-            #if num_of_product < 10, or default one (now is 10)
-            # need to fill the minimum to at least default
-            #if num_of_product
-            if num_of_product < constant.DEFAULT_PAGE_LENGTH:
-                num_of_product = constant.DEFAULT_PAGE_LENGTH
-
-            # we limit the number of item to be scraped.
-            if num_of_product > 100:
-                num_of_product = 100
-
-            try:
-                if required_args[2]:
-                    page_length = int(required_args[2])
-            except IndexError:
-                page_length = constant.DEFAULT_PAGE_LENGTH
-                typer.secho(f'page_length is not given,'
-                            f'the app will use default length:{constant.DEFAULT_PAGE_LENGTH}'
-                            , fg=typer.colors.YELLOW)
-
-            typer.secho(
-                    f"""scrap for {keyword} is starting!""",
-                    fg=typer.colors.GREEN,
-                )
-
-            explorer = get_explorer()
-            response, error = explorer.scrap(keyword,num_of_product,mode,page_length)
-            if error:
-                typer.secho(
-                    f'failed with "{ERRORS[error]}"', fg=typer.colors.RED
-                )
-                raise typer.Exit(error)
-            else:
-                typer.secho(
-                    f"""explorer: "{response['keyword']}" was searched"""
-                    f"""and collected successfully\n"""
-                    f"""with options: page_num {response['page_num']} and  """
-                    f"""page_length {response['page_length']}\n""",
-                    fg=typer.colors.GREEN,
-                )
-    else:
-        typer.secho(
-            "sorry, it's not supported yet. please wait for the next version",
-             fg=typer.colors.RED,
-        )
-        raise typer.Exit(10)
-
+### remove ###
 
 
 @app.command()
@@ -440,10 +244,10 @@ def scrap_async(
         help="we have three modes ALL, PRODUCT_ITEMS, PRODUCT_COMMENTS available. user can \
 choose to scrap all two data (product or comment or index) or three for ALL. the default is 1 for ALL."
         ),
-    retry: int = typer.Option(
-        1, "--retry", "-r", min=1, max=5,
-        help="this is not yet supported, we'll target v1.3 to implement."
-        ),
+    # retry: int = typer.Option(
+    #     1, "--retry", "-r", min=1, max=5,
+    #     help="this is not yet supported, we'll target v1.3 to implement."
+    #     ),
     verbose_level: int = typer.Option(
         3, "--verbose", "-ve", min=1, max=3,
         help="verbose 1 dumps all detailed debugging info, the default 3 just print \
@@ -473,7 +277,7 @@ error message if something bad happens."
     # debug
     #mylogger.debug(f'inputs are args - {required_args}, mode - {mode}, searcher-type - \
     #    {searcher_type}, retry - {retry}')
-
+    retry = 3
     mylogger.debug('inputs are args - %s, mode - %i,\
          retry - %i, verbose - %i', required_args, mode,\
             retry, verbose_level)
