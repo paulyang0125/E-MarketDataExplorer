@@ -163,7 +163,7 @@ test_data3_1 = {
 )
 
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_async(keyword, num_of_product, mode, page_length, data_source):
     """test"""
     explorer = get_explorer(data_source)
@@ -192,7 +192,7 @@ def test_scrap_async(keyword, num_of_product, mode, page_length, data_source):
 )
 
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_async_all_over_cli(keyword,num_of_product,page_length,mode) -> None:
     "test"
     #result = runner.invoke(cli.app, ["scrap-async",keyword,page_num, '-ve', 1])
@@ -225,7 +225,7 @@ def test_scrap_async_all_over_cli(keyword,num_of_product,page_length,mode) -> No
 )
 
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_async_product_over_cli(keyword,num_of_product,page_length,mode) -> None:
     "test"
 
@@ -254,7 +254,7 @@ def test_scrap_async_product_over_cli(keyword,num_of_product,page_length,mode) -
 )
 
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_async_comment_over_cli(keyword,num_of_product,page_length, mode) -> None:
     "test"
 
@@ -283,7 +283,7 @@ def test_scrap_async_comment_over_cli(keyword,num_of_product,page_length, mode) 
     ]
 )
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_scrap_async_index_over_cli(keyword,num_of_product,page_length,mode) -> None:
     "test"
     result = runner.invoke(cli.app, ["scrap-async",keyword,num_of_product,page_length,\
@@ -320,7 +320,7 @@ def test_scrap_async_index_over_cli(keyword,num_of_product,page_length,mode) -> 
     ]
 )
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_do_eda(product_csv_name,product_comment_name, data_source):
     """test"""
     explorer = get_explorer(data_source)
@@ -348,7 +348,7 @@ def test_do_eda(product_csv_name,product_comment_name, data_source):
     ]
 )
 
-#@pytest.mark.skip(reason="tested, skip first to save time")
+@pytest.mark.skip(reason="tested, skip first to save time")
 def test_eda_over_cli(product_csv_name,product_comment_name,data_source):
     """ validate the eda cli output"""
     result = runner.invoke(cli.app, ["eda",product_csv_name,\
