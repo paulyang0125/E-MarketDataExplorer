@@ -147,3 +147,7 @@ csv_backup/
 making_doc_data/
 tutorial.docx
 codecov
+backup_myenv/
+backup_requirements.txt
+/docs/source/_autosummary/
+tests/backup_test_shopee_data_explorer.py
