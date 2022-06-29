@@ -15,7 +15,7 @@ STP python module (now it's under construction). When it's done, marketing staff
 just use our toolbox to streamline the prior time-consuming processes of conducting
 STP by typing a few clicks.
 
-Check out the :doc:`get_started` section for further information, including
+Check out the :doc:`get_started_v1.5` section for further information, including
 how to :ref:`installation` the project.
 
 .. note::
@@ -27,7 +27,7 @@ Contents
 
 .. toctree::
 
-   get_started
+   get_started_v1.5
    eda_chart
    api
    dev_insights

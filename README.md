@@ -7,7 +7,6 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/b873efdf1a77d343aeb3/maintainability)](https://codeclimate.com/github/paulyang0125/E-MarketDataExplorer/maintainability)
 ![pylint Score](https://mperlet.github.io/pybadge/badges/8.53.svg)
 [![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-![t](https://img.shields.io/badge/status-maintained-yellow.svg)
 [![](https://img.shields.io/github/license/paulyang0125/E-MarketDataExplorer.svg)](https://github.com/paulyang0125/E-MarketDataExplorer/blob/main/LICENSE)
 
 
