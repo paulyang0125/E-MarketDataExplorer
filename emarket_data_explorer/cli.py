@@ -42,43 +42,6 @@ def init(
         prompt="e-market data explorer data location?",
         help="where e-market data explorer will save its finding on your OS",
     ),
-    #  db_path: str = typer.Option(
-    #     str(database.DEFAULT_DB_FILE_PATH),
-    #     "--db-path",
-    #     "-db",
-    #     prompt="e-market data database location?",
-    #     help="where e-market data explorer will save the index database on your OS",
-    # ),
-    # ip_addresses: str = typer.Option(
-    #     str(constant.DEFAULT_IP_RANGES),
-    #     "--ips-range",
-    #     "-ips",
-    #     prompt="e-market data explorer proxy ip ranges?",
-    #     help="e-market data explorer will rotate its IP based on those proxy IP addresses",
-    # ),
-
-    # proxy_auth: str = typer.Option(
-    #     str(constant.DEFAULT_PROXY_AUTH),
-    #     "--proxy-auth",
-    #     "-proxy",
-    #     prompt="e-market data explorer proxy credential?",
-    #     help="e-market data explorer will access the proxy server based on this credential",
-    # ),
-    #my_header: str = typer.Option(
-    #    str(constant.DEFAULT_HEADER),
-    #    "--myheader",
-    #    "-header",
-    #    prompt="shopee explorer http/https header?",
-    #),
-
-    # webdriver_path: str = typer.Option(
-    #     str(constant.DEFAULT_CHROME_WEBDRIVER),
-    #     "--webdriver-path",
-    #     "-webdriver",
-    #     prompt="e-market data explorer webdriver path?",
-    #     help="this is where you store the selenium webdriver. currently we can support Chrome",
-    # ),
-
     data_source: int = typer.Option(
         1, "--data_source", "-d", min=1, max=3,
         prompt="e-market data explorer data source?",
@@ -140,6 +103,45 @@ def get_explorer() -> shopee_data_explorer.ShopeeExplorer:
         #data_path = constant.get_data_path(config.CONFIG_FILE_PATH)
         data_path,ip_addresses,proxy_auth,webdriver_path,data_source,db_path,my_header = \
             shopee_crawler.get_configs_data(config.CONFIG_FILE_PATH)
+        if not data_path.exists():
+            typer.secho(
+                        'Config file error. Please, run "shopee_data_explorer\
+                                init"',
+                        fg=typer.colors.RED,
+                    )
+            raise typer.Exit(1)
+        if not isinstance(ip_addresses, List):
+            typer.secho(
+                        'ip_addresses in Config file error. Please, \
+                            run "shopee_data_explorer\
+                                init"',
+                        fg=typer.colors.RED,
+                    )
+            raise typer.Exit(1)
+        if not proxy_auth and not webdriver_path:
+            typer.secho(
+                        'proxy_auth or webdriver path in Config file error. Please, \
+                            run "shopee_data_explorer\
+                                init"',
+                        fg=typer.colors.RED,
+                    )
+            raise typer.Exit(1)
+        if not isinstance(my_header,Dict):
+            typer.secho(
+                        'my_header in Config file error. Please, \
+                            run "shopee_data_explorer\
+                                init"',
+                        fg=typer.colors.RED,
+                    )
+            raise typer.Exit(1)
+        if not data_source:
+            typer.secho(
+                        'data_source in Config file error. Please, \
+                            run "shopee_data_explorer\
+                                init"',
+                        fg=typer.colors.RED,
+                    )
+            raise typer.Exit(1)
 
     else:
         typer.secho(
@@ -148,17 +150,18 @@ def get_explorer() -> shopee_data_explorer.ShopeeExplorer:
         )
         raise typer.Exit(1)
 
-    if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
-        and webdriver_path and isinstance(my_header,Dict) and data_source:
-        return shopee_data_explorer.ShopeeExplorer(data_path=data_path,db_path=db_path,\
-            ip_addresses=ip_addresses,proxy_auth=proxy_auth,my_header=my_header, \
-                webdriver_path=webdriver_path, data_source=int(data_source))
-    else:
-        typer.secho(
-            'the config arguments data not found. Please, run "shopee_data_explorer init"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
+    # if data_path.exists() and isinstance(ip_addresses, List) and proxy_auth \
+    #     and webdriver_path and isinstance(my_header,Dict) and data_source:
+    return shopee_data_explorer.ShopeeExplorer(data_path=data_path,db_path=db_path,\
+        ip_addresses=ip_addresses,proxy_auth=proxy_auth,my_header=my_header, \
+            webdriver_path=webdriver_path, data_source=int(data_source))
+
+    # else:
+    #     typer.secho(
+    #         'the config arguments data not found. Please, run "shopee_data_explorer init"',
+    #         fg=typer.colors.RED,
+    #     )
+    #     raise typer.Exit(1)
 
 def _version_callback(value: bool) -> None:
     if value:
@@ -238,16 +241,11 @@ def scrap_async(
         For example, e-market-data explorer scrap basketball 100
         """,
         ),
-    #source: int = typer.Option(0, "--scrap_source", "-ss", min=0, max=2),
     mode: int = typer.Option(
         1, "--scrap_mode_for_shopee", "-sm", min=1, max=4,
         help="we have three modes ALL, PRODUCT_ITEMS, PRODUCT_COMMENTS available. user can \
 choose to scrap all two data (product or comment or index) or three for ALL. the default is 1 for ALL."
         ),
-    # retry: int = typer.Option(
-    #     1, "--retry", "-r", min=1, max=5,
-    #     help="this is not yet supported, we'll target v1.3 to implement."
-    #     ),
     verbose_level: int = typer.Option(
         3, "--verbose", "-ve", min=1, max=3,
         help="verbose 1 dumps all detailed debugging info, the default 3 just print \

@@ -79,13 +79,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                 start = time.monotonic()
                 async with session.get(url, headers=self.header,proxy=aio_proxies['http'],\
                     timeout=timeout,raise_for_status=True) as response:
-                    # target = url.rpartition('/')[-1]
-                    # size = int(response.headers.get('content-length', 0)) or None
-                    # position = await progress_queue.get()
-                    # progressbar = tqdm(
-                    #     desc=target, total=size, leave=False,
-                    # )
-
                     if response.status == 200:
                         mylogger.debug('each duration: %d',time.monotonic() - start)
                         mylogger.debug("Read %i bytes from %s",len(await response.read()),url)
@@ -116,24 +109,15 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         async with aiohttp.ClientSession() as session:
             logging.info("Starting to create the session")
             tasks = []
-
-            #progress_queue = asyncio.Queue(loop=loop)
-            #for pos in range(5):
-            #    progress_queue.put_nowait(pos)
-            #for url in tqdm(sites,total=len(sites), position=0, leave=True):
-            for url in sites:
-            #for url in tqdm.asyncio(sites,total=len(sites), position=0, leave=True):
+            for url in sites: #for url in tqdm.asyncio(sites,total=len(sites), position=0, leave=True):
                 task = asyncio.ensure_future(self._fetch(session,url,parse_func))
                 tasks.append(task)
-            #pbar = tqdm(total=len(task), position=0, ncols=90)
 
             for future in tqdm(asyncio.as_completed(tasks),\
                 total=len(sites), position=0, leave=True, desc="scrap content"):
                 result = await future
                 results.append(result)
-
-            #return await asyncio.gather(*tasks, return_exceptions=True)
-            return results
+            return results #return await asyncio.gather(*tasks, return_exceptions=True)
 
     def _rotate_ip(self) -> None:
         """ rotate the current IP from the list of proxy ip addresses """
@@ -175,20 +159,11 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
     async def scrap_index(self,kwargs:Dict[str,Any]) \
         ->  Tuple[pd.DataFrame,List[tuple], List[int]]:
         """ read the search result by shopee api """
-
         mylogger.info("scrap_index starts")
-        #page_num = num_of_product // page_length
-
-
         ###### index
-
-        # read_search_indexs_urls = [self.read_search_indexs_url(keyword,page,page_length) for page \
-        #      in range(page_nums)]
-
         read_search_indexs_urls = [self.read_search_indexs_url(kwargs['keyword'],\
             page,kwargs['page_length']) for page \
                 in range(kwargs['page_nums'])]
-
 
         search_index_results = await asyncio.gather(self._download_all_sites(\
             read_search_indexs_urls,self.parsing_candidates['parse_search_indexs']))
@@ -207,13 +182,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         mylogger.debug("how many index: %i",len(search_index_results[0]))
 
         ### start parsing
-        #ids_pool = []
-        # processed_index_dfs = [self.process_raw_search_index(each) for each in \
-        #     search_index_results[0] if search_index_results[0]]
-
-        # processed_index_dfs = [self.process_raw_search_index(each) for each in \
-        #     search_index_results[0] if search_index_results[0]]
-
         processed_index_dfs = [kwargs['data_processor'].process_raw_search_index(each) for each in \
             search_index_results[0] if search_index_results[0]]
 
@@ -225,11 +193,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                         merged_search_index_df['shopid'].tolist(),\
                                 merged_search_index_df['name'].tolist())])
         #shopee,will remove
-        # if mode == emarket_data_explorer.ALL:
-        #     crawler_mode = MODES[mode].split(':')[2]
-        # else:
-        #     crawler_mode = MODES[mode]
-
         if kwargs['mode'] == emarket_data_explorer.ALL:
             crawler_mode = MODES[kwargs['mode']].split(':')[2]
         else:
@@ -286,23 +249,15 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                 product_comments_container = kwargs['data_processor'].\
                     update_comment_data(each_product)
 
-        # if mode == emarket_data_explorer.ALL:
-        #     crawler_mode = MODES[mode].split(':')[1]
-        # else:
-        #     crawler_mode = MODES[mode]
-
         if kwargs['mode'] == emarket_data_explorer.ALL:
             crawler_mode = MODES[kwargs['mode']].split(':')[1]
         else:
             crawler_mode = MODES[kwargs['mode']]
 
         mylogger.debug("comment.crawler_mode: %s", crawler_mode)
-
         duration = time.time() - start_time
         mylogger.debug("Parsing Duration %d seconds", duration)
-
         #crawler_mode = get_crawler_mode(mode)
-
         ### write data
         mylogger.info('start writing - comment ')
         #self.write_csv(product_comments_container,keyword,data_source,crawler_mode)
@@ -326,8 +281,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         ## start crawler
         product_list = []
         mylogger.info('start crawler - product')
-        #
-        # sites_lists = self.split_list(search_results_urls, wanted_parts=page_nums)
         sites_lists = self.split_list(search_results_urls, wanted_parts=kwargs['page_nums'])
         for sites in sites_lists:
             the_product_results = await asyncio.gather(self._download_all_sites(sites,\
@@ -346,19 +299,11 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
                 #self.extract_product_data(each_page)
                 kwargs['data_processor'].extract_product_data(each_page)
 
-
-        # self.product_items_container = self.aggregate_product_data(self.\
-        #     product_items_container,merged_search_index_df)
         self.product_items_container = kwargs['data_processor'].aggregate_product_data(self.\
             product_items_container,merged_search_index_df)
 
         #self.clean_product_data()
         kwargs['data_processor'].clean_product_data()
-
-        # if mode == emarket_data_explorer.ALL:
-        #     crawler_mode = MODES[mode].split(':')[0]
-        # else:
-        #     crawler_mode = MODES[mode]
 
         if kwargs['mode'] == emarket_data_explorer.ALL:
             crawler_mode = MODES[kwargs['mode']].split(':')[0]
@@ -385,10 +330,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
     async def process_all(self,kwargs:Dict[str,Any]) -> AsyncCrawlerResponse:
         """ the entry function to be called by a workflow class for ALL mode """
-        ###### index
-        # page_nums = self.get_page(num_of_product,page_length)
-        # merged_search_index_df, ids_pool, status_index = await self.scrap_index(
-        #                 keyword,page_nums,page_length,data_source,mode)
 
         page_nums = self.get_page(kwargs['num_of_product'],kwargs['page_length'])
         kwargs['page_nums'] = page_nums
@@ -397,17 +338,11 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         if status_index == READ_INDEX_ERROR or len(ids_pool) == 0:
              #my_return = AsyncCrawlerResponse({},[status_index])
             return AsyncCrawlerResponse({},[status_index])
-
         ###### productinfo
-
-        # (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
-        #                 merged_search_index_df,page_nums,keyword,data_source,mode)
         (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
                         merged_search_index_df,kwargs)
 
-
         ###### productcomment
-
         (product_comments_container, status_comment) = await self.scrap_comment(ids_pool,kwargs)
 
         result_dict = {}
@@ -419,27 +354,16 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
         return my_return
 
-
         # return (ids_pool,merged_search_index_df,product_items_container,\
         #     product_comments_container,[status_index,status_product,status_comment])
         #return AsyncCrawlerResponse(result_dict,[status_index,status_product,status_comment])
         #return (result_dict,[status_index,status_product,status_comment])
         #return (ids_pool,[status_index,status_product,status_comment])
 
-
-
-
-
-
-
     #async def process_product(self,keyword,num_of_product,page_length,data_source,mode):
     async def process_product(self,kwargs:Dict[str,Any]) -> AsyncCrawlerResponse:
         """ the entry function to be called by a workflow class for product mode """
         ###### index
-
-        # page_nums = self.get_page(num_of_product,page_length)
-        # merged_search_index_df, ids_pool, status_index = await self.scrap_index(
-        #             keyword,page_nums,page_length,data_source,mode)
 
         page_nums = self.get_page(kwargs['num_of_product'],kwargs['page_length'])
         kwargs['page_nums'] = page_nums
@@ -449,8 +373,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
 
         ###### productinfo
 
-        # (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
-        #             merged_search_index_df,page_nums,keyword,data_source,mode)
         (product_items_container, status_product) = await self.scrap_product_info(ids_pool,\
                     merged_search_index_df,kwargs)
 
@@ -462,7 +384,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         my_return = AsyncCrawlerResponse(result_dict,[status_index,status_product])
 
         return my_return
-
 
         # return (ids_pool,merged_search_index_df,product_items_container,\
         #     [status_index,status_product])
@@ -510,11 +431,6 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         """the entry function to be called by a workflow class for index mode"""
 
         ###### index
-
-        # page_nums = self.get_page(num_of_product,page_length)
-        # merged_search_index_df, ids_pool, status_index = await self.scrap_index(
-        #             keyword,page_nums,page_length,data_source,mode)
-
         page_nums = self.get_page(kwargs['num_of_product'],kwargs['page_length'])
         kwargs['page_nums'] = page_nums
         merged_search_index_df, ids_pool, status_index = await self.scrap_index(kwargs)
@@ -524,6 +440,4 @@ class ShopeeAsyncCrawlerHandler(CrawlerHandler):
         result_dict['merged_search_index_df'] = merged_search_index_df
         my_return = AsyncCrawlerResponse(result_dict,[status_index])
 
-
-        #return (ids_pool,merged_search_index_df,[status_index])
-        return my_return
+        return my_return #return (ids_pool,merged_search_index_df,[status_index])
