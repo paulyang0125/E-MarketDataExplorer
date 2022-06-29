@@ -5,7 +5,6 @@
 # Created Date: 24/05/2022
 # version ='1.1'
 # ---------------------------------------------------------------------------
-
 """This module provides the Shopee EDA functionality.
 
 Todo:\n
@@ -15,7 +14,6 @@ Todo:\n
 # shopee_data_explorer/shopee_eda.py
 
 ####### utilities #########
-
 import ast
 import random
 import base64
@@ -27,7 +25,6 @@ import pandas as pd
 from matplotlib.font_manager import FontProperties
 import matplotlib.pyplot as plt
 import numpy as np
-
 from adjustText import adjust_text
 from emarket_data_explorer import SUCCESS
 
@@ -39,10 +36,6 @@ class EDAResponse(NamedTuple):
 class ShopeeEDA():
     """ this class provides EDA functionality """
     ####### constants and instance variables ########
-
-    # def __init__(self,keyword:str ,data_source: str, data_path:Path,chart_groups:List[str],\
-    #      product_data:pd.DataFrame,comments_data:pd.DataFrame,my_font:FontProperties,\
-    #          chart_color=None)->None:
     def __init__(self,**kwargs)->None:
         """this class is doing EDA"""
         self.owd = os.getcwd()
@@ -121,9 +114,7 @@ class ShopeeEDA():
         # merge content's'itemid', 'price','name'to comment
         self.comments = self.comments.merge(self.contents[['itemid', 'price','name']], \
         how = 'left', on='itemid')
-        # issue：remove duplicated items
-        # hint：drop_duplicates
-        self.comments = self.comments.drop_duplicates()
+        self.comments = self.comments.drop_duplicates() # issue：remove duplicated items
         # get the key columns for comments_final
         self.comments_final = self.comments[['itemid',	'shopid',	'name',	'price',\
             'userid','ctime','orderid', 'rating_star', 'comment','product_items']]
@@ -138,7 +129,6 @@ class ShopeeEDA():
         shopee_comment_name = "shopee_processed_comment_data.csv"
         self.contents_final.to_csv(shopee_product_name,encoding = 'UTF-8-sig')
         self.comments_final.to_csv(shopee_comment_name,encoding= 'UTF-8-sig')
-
 
     def make_figures(self,charts:list) -> EDAResponse:
         """ run iteratively to create the specified charts """
@@ -193,7 +183,6 @@ class ShopeeEDA():
         plt.tight_layout()
         self.make_pics_html(plt,1)
         return SUCCESS
-
 
     def make_figure2(self) -> None:
         """ create the 2nd chart """
@@ -258,22 +247,19 @@ class ShopeeEDA():
         for tags,likes,his_sold in zip(self.contents_final['Tag'].tolist(), \
             self.contents_final['liked_count'].tolist()\
             ,self.contents_final['historical_sold'].tolist()):
-            #print("i: " + str(type(i)))
             if not isinstance(tags, list):
                 tags =  ast.literal_eval(tags)
 
             for tag in tags:
                 # if not repeate, add the new tag to the four lists
                 if tag not in tags_list and tag:
-                    # debug, not decided to add yet
                     tag = tag.replace('^n',"")
-
                     tags_list.append(tag)
                     count_list.append(1)
                     like_list.append(likes)
                     sale_list.append(his_sold)
-                # if repeate, increase the numbers for that repeated tag in count_list、\
-                # like_list、sale_list
+                # if repeated, increase the numbers for that repeated tag \
+                # in count_list、like_list、sale_list
                 else:
                     if tag:
                         count_list[tags_list.index(tag)] = count_list[tags_list.index(tag)]+1
@@ -302,7 +288,6 @@ class ShopeeEDA():
         self.make_pics_html(plt,5)
         return SUCCESS
 
-
     def make_figure6(self) -> None:
         """ create the 6th chart """
         plt.figure( figsize = (10,6))
@@ -310,8 +295,6 @@ class ShopeeEDA():
         plt.title("Co-Relationship between tags and sales",fontsize=30,\
             fontproperties=self.my_font,color='white',bbox=dict(boxstyle='square,pad=0',\
                 fc=self.chart_color, ec='none'))
-        #txt_height = 0.0037*(plt.ylim()[1] - plt.ylim()[0])
-        #txt_width = 0.018*(plt.xlim()[1] - plt.xlim()[0])
         tags = []
         likes = []
         sales = []
@@ -320,9 +303,7 @@ class ShopeeEDA():
             if like > self.tag_data['total_likes'].mean()+self.tag_data['total_likes'].std()*1 \
                 and sale > self.tag_data['sales'].mean()+self.tag_data['sales'].std()*1:
                 #plt.text(like, sale, tag, fontsize=12,) # annotate the tag name on the last day
-                #if not like in likes or not sale in sales:
-
-                # debug, not decided to add yet
+                #if not like in likes or not sale in sales: debug, not decided to add yet
                 tag = tag.replace('^n',"")
 
                 tags.append(tag)
@@ -332,18 +313,11 @@ class ShopeeEDA():
                 tags.append(tag)
                 likes.append(like)
                 sales.append(sale)
-
-
         texts = []
         for x_pos, y_pos, text in zip(likes[:], sales[:], tags[:]):
             texts.append(plt.text(x_pos, y_pos, text))
-
         plt.xlabel("Like Counts",fontsize=20,)
         plt.ylabel("Total amount of sales",fontsize=20,)
-
-        #text_positions = self.get_text_positions(tags, likes, sales, txt_width, txt_height)
-        #self.text_plotter(tags, likes, sales, text_positions, txt_width, txt_height)
-        #adjust_text(texts,arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         adjust_text(texts,only_move={'points':'y', 'texts':'y'},\
             arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         plt.grid(True)
@@ -355,17 +329,13 @@ class ShopeeEDA():
         """ perform the workflow of the entire EDA """
 
         #todo: need to decouple this workflow for shopee from do_eda(). this need to works
-        # more generically
-        # preprocessing
+        # more generically preprocessing
         print("1. start preprocessing!")
         self.clean_data()
         self.create_tags()
         self.process_rating()
         self.create_preprocessed_dataframes()
-        # drawing
         print("2. start drawing!")
-        #os.chdir(self.data_path)
-
         os.chdir(self.data_path)
         self.prepare_figures_header()
         os.chdir(self.owd)
