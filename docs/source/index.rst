@@ -20,7 +20,7 @@ how to :ref:`installation` the project.
 
 .. note::
 
-   This project is under active development.
+   Current version is 1.5.0. This project is under active development.
 
 Contents
 --------
@@ -30,4 +30,5 @@ Contents
    get_started
    eda_chart
    api
+   dev_insights
    author
