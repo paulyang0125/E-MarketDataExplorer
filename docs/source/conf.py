@@ -13,7 +13,7 @@ copyright = '2022, Paul Yang and Kana Kunikata'
 author = 'Paul Yang and Kana Kunikata'
 
 release = '1.0'
-version = '1.1.0'
+version = '1.5.0'
 
 # -- General configuration
 
