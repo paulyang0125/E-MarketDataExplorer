@@ -20,7 +20,7 @@ E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) to
 
 #### E-MarketDataExplorer SCRAP
 
-![app test](https://user-images.githubusercontent.com/4502089/173171638-7c8f5aba-c890-430a-9809-ed2acdff7a24.png)
+![scrap-async](https://user-images.githubusercontent.com/4502089/176334966-56983073-f6dc-41c2-864b-323cd7766bf3.png)
 
 
 #### E-MarketDataExplorer EDA
