@@ -149,5 +149,7 @@ tutorial.docx
 codecov
 backup_myenv/
 backup_requirements.txt
-/docs/source/_autosummary/
+docs/source/_autosummary/
 tests/backup_test_shopee_data_explorer.py
+docs/backup_build_v1.3_desc_but_v1.5_api
+docs/backup_source_v1.3_desc_v1.5_api

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Paul Yang and Kana Kunikata
-# Created Date: 24/05/2022
-# version ='1.1'
+# Created Date: 24/06/2022
+# version ='1.3'
 # ---------------------------------------------------------------------------
 
 """Top-level package for E-market Data Explorer"""
