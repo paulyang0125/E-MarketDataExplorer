@@ -1,8 +1,55 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "E-market data explorer"
-authors = [{name = "Paul Yang", email = "paulyang0125@gmail.com"}]
-dynamic = ["version", "description"]
+name = "emarket-data-explorer"
+version = "1.0.0"
+description = "Read ecommerce data and explore data through Exploratory Data Analysis"
+authors = [{name = "Paul Yang", email = "paulyang0125@gmail.com"},{name = "Kana Kunikata", email = "vinaknkt@gmail.com"}]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+]
+keywords = ["ecommerce", "data-analysis", "reader"]
+dependencies = [
+    "typer >= 0.4.1",
+    "pandas >= 1.4.3",
+    "matplotlib >= 3.5.2",
+    "adjustText >= 0.7.3",
+    "aiohttp >= 3.8.1",
+    "tqdm >= 4.64.0",
+    "bs4 >= 0.0.1",
+    "lxml >= 4.9.0",
+]
+requires-python = ">=3.8"
+
+[project.scripts]
+emarket-data-explorer = "emarket_data_explorer.__main__:main"
+
+[project.optional-dependencies]
+dev = ["bumpver", "Sphinx", "pip-tools", "pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+[tool.bumpver]
+current_version = "1.0.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"setup.py" = [
+    "{version}"
+]
+"src/emarket_data_explorer/__init__.py" = ["{version}"]

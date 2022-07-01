@@ -1,0 +1,5 @@
+# MANIFEST.in
+
+include src/emarket_data_explorer/tools
+include src/emarket_data_explorer/tools/msj.ttf
+exclude tests/*
