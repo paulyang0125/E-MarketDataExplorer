@@ -12,7 +12,7 @@
 
 ## Overview
 
-E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale.
+E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale. It's available in [PyPi](https://pypi.org/project/emarket-data-explorer/).
 
 
 ## Preview

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emarket-data-explorer"
-version = "1.0.0"
+version = "1.0.1"
 description = "Read ecommerce data and explore data through Exploratory Data Analysis"
 authors = [{name = "Paul Yang", email = "paulyang0125@gmail.com"},{name = "Kana Kunikata", email = "vinaknkt@gmail.com"}]
 classifiers = [
@@ -47,7 +47,7 @@ push = true
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
-    'current_version = "{version}"',
+    'current_version = "{version}"',"{version}",
 ]
 "setup.py" = [
     "{version}"
