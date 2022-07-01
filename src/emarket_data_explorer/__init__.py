@@ -10,7 +10,7 @@
 # emarket_data_explorer/__init__.py
 
 __app_name__ = "emarket_data_explorer"
-__version__ = "1.1.0"
+__version__ = "1.0.1"
 
 #errors enumeration
 (
