@@ -12,7 +12,7 @@
 
 ## Overview
 
-E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale.
+E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) tool for marketing specialties who would like to conduct the STP methods for working out their marketing strategy for product development and sale. It's available in [PyPi](https://pypi.org/project/emarket-data-explorer/).
 
 
 ## Preview
@@ -30,7 +30,7 @@ E-Market Data Explorer is a Python crawler and exploratory data analysis(EDA) to
 ## E-MarketDataExplorer HELP
 
 ```
-$ python -m emarket_data_explorer scrap-async --help
+$ python -m emarket_data_explorer --help
 
     Usage: emarket_data_explorer [OPTIONS] COMMAND [ARGS]...
 
@@ -66,18 +66,7 @@ $ python -m emarket_data_explorer scrap-async --help
 
 Please refer to the [E-Market Data Explorer online documentation](https://e-marketdataexplorer.readthedocs.io/en/latest/index.html) for Get-Started, EDA explanation, Testing and Troubleshooting
 
-
-## For Developer
-
-API docs is under actively development but we target v1.3 to release it.
-
-
-## Python Dependencies
-
-Please refer to requirements.txt and install all the required packages by
-```
-$ pip install -r requirements.txt
-```
+![doc_preview_github](https://user-images.githubusercontent.com/4502089/176811818-ffb5b503-cb72-444d-ae2d-0f75734c8d71.png)
 
 
 ## License
@@ -90,3 +79,6 @@ It is distributed under the Apache License. See LICENSE.txt for more information
 [Paul Yang](https://github.com/paulyang0125) ; [Kana Kunikata](https://github.com/vinavinak)
 
 
+## Roadmap
+
+We've developed [our roadmap of this utility](https://github.com/paulyang0125/E-MarketDataExplorer/wiki/E-MarketDataExplorer-Roadmap-Planning). Check it out if you're interested in joining us.

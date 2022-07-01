@@ -16,7 +16,7 @@ Todo:\n
 """
 # shopee_data_explorer/shopee_data_explorer.py
 
-
+import os
 from typing import Tuple
 import logging
 
@@ -26,7 +26,6 @@ from matplotlib.font_manager import FontProperties
 from emarket_data_explorer import SUCCESS, EDA_ERROR
 import emarket_data_explorer
 from emarket_data_explorer import shopee_eda
-
 from emarket_data_explorer.shopee_eda import ShopeeEDA
 from emarket_data_explorer.shopee_async_crawler import ShopeeAsyncCrawlerHandler
 from emarket_data_explorer.data_process import ShopeeAsyncCrawlerDataProcesser
@@ -34,6 +33,28 @@ from emarket_data_explorer.database import ShopeeAsyncDatabaseHandler
 from emarket_data_explorer.datatype import ScrapingInfo
 from emarket_data_explorer.workflow import ShopeeAsyncWorkFlow
 from emarket_data_explorer.classtype import Explorer
+
+
+# def load_msj():
+#     try:
+#         import importlib.resources as pkg_resources, resource
+#     except ImportError:
+#         # Try backported to PY<37 `importlib_resources`.
+#         import importlib_resources as pkg_resources
+#     #from pkg_resources import resource_string as resource_bytes
+#     from . import tools
+#     #word_file = resource_bytes(tools, 'msj.ttf')
+#     word_file = resource.open_binary(tools, 'msj.ttf')
+#     return word_file
+
+# def load_msj_1():
+#     import pkgutil
+#     from . import tools
+#     #word_file = resource_bytes(tools, 'msj.ttf')
+#     word_file = pkgutil.get_data(__name__, "tools/msj.ttf")
+#     return word_file
+
+
 
 mylogger = logging.getLogger(__name__)
 fh = logging.FileHandler(f'{__name__}.log')
@@ -45,6 +66,12 @@ fh.setFormatter(formatter)
 # add the handlers to logger
 mylogger.addHandler(ch)
 mylogger.addHandler(fh)
+
+
+def get_path():
+    import emarket_data_explorer
+    src_path = os.path.dirname(emarket_data_explorer.__file__)
+    return src_path
 
 
 
@@ -69,6 +96,10 @@ class ShopeeExplorer(Explorer):
         ### remove ###
 
         ### remove ###
+        #self.owd = os.getcwd()
+        #print(f"explorer self.owd:{self.owd}")
+        self.src_path = get_path()
+        #self.word_file = load_msj_1()
 
         self._shopee_async_data_processor = ShopeeAsyncCrawlerDataProcesser(kwargs['data_source'])
         self._shopee_async_db_handler = ShopeeAsyncDatabaseHandler(kwargs['data_path']\
@@ -124,7 +155,9 @@ class ShopeeExplorer(Explorer):
     def do_eda(self, product_csv_name:str, product_comment_name:str)-> shopee_eda.EDAResponse:
         """the main entry of EDA command that will generate 6 EDA charts with the pre-process """
         the_os, os_encode = self._detect_path_format_for_os()
-        my_font = FontProperties(fname='tools'+ the_os + 'msj.ttf')
+        word_file = self.src_path + the_os + 'tools'+ the_os + 'msj.ttf'
+        #my_font = FontProperties(fname='tools'+ the_os + 'msj.ttf')
+        my_font = FontProperties(fname=word_file)
         product_csv_name_path = self.data_path.joinpath(product_csv_name)
         product_comment_name_path = self.data_path.joinpath(product_comment_name)
         #os.chdir(self.data_path)
