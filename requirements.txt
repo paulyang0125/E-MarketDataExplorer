@@ -6,7 +6,7 @@
 #
 adjusttext==0.7.3
     # via emarket-data-explorer (pyproject.toml)
-aiohttp==3.8.1
+aiohttp==3.9.0
     # via emarket-data-explorer (pyproject.toml)
 aiosignal==1.2.0
     # via aiohttp
@@ -28,7 +28,7 @@ build==0.8.0
     # via pip-tools
 bumpver==2022.1116
     # via emarket-data-explorer (pyproject.toml)
-certifi==2022.6.15
+certifi==2023.7.22
     # via requests
 charset-normalizer==2.1.0
     # via
@@ -45,7 +45,7 @@ cycler==0.11.0
     # via matplotlib
 docutils==0.18.1
     # via sphinx
-fonttools==4.33.3
+fonttools==4.43.0
     # via matplotlib
 frozenlist==1.3.0
     # via
@@ -61,7 +61,7 @@ importlib-metadata==4.12.0
     # via sphinx
 iniconfig==1.1.1
     # via pytest
-jinja2==3.1.2
+jinja2==3.1.3
     # via sphinx
 kiwisolver==1.4.3
     # via matplotlib
@@ -96,7 +96,7 @@ pathlib2==2.3.7.post1
     # via bumpver
 pep517==0.12.0
     # via build
-pillow==9.1.1
+pillow==10.0.1
     # via matplotlib
 pip-tools==6.8.0
     # via emarket-data-explorer (pyproject.toml)
@@ -104,7 +104,7 @@ pluggy==1.0.0
     # via pytest
 py==1.11.0
     # via pytest
-pygments==2.12.0
+pygments==2.15.0
     # via sphinx
 pyparsing==3.0.9
     # via
@@ -120,7 +120,7 @@ pytz==2022.1
     # via
     #   babel
     #   pandas
-requests==2.28.1
+requests==2.31.0
     # via sphinx
 six==1.16.0
     # via
@@ -155,9 +155,9 @@ tqdm==4.64.0
     # via emarket-data-explorer (pyproject.toml)
 typer==0.4.1
     # via emarket-data-explorer (pyproject.toml)
-urllib3==1.26.9
+urllib3==1.26.18
     # via requests
-wheel==0.37.1
+wheel==0.38.0
     # via pip-tools
 yarl==1.7.2
     # via aiohttp
