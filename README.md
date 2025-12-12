@@ -42,8 +42,7 @@ $ python -m emarket_data_explorer --help
 
     Author:
 
-    Currently written and maintained by Paul Yang <paulyang0125@gmail> and Kana
-    Kunikata <vinaknkt@gmail.com>.
+    Currently written and maintained by Paul Yang <paulyang0125@gmail> 
 
     Options:
     -v, --version                   Show the application's version and exit.
@@ -76,8 +75,7 @@ It is distributed under the Apache License. See LICENSE.txt for more information
 
 ## Contact
 
-[Paul Yang](https://github.com/paulyang0125) ; [Kana Kunikata](https://github.com/vinavinak)
-
+[Paul Yang](https://github.com/paulyang0125) 
 
 ## Roadmap
 
