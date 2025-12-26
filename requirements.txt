@@ -67,7 +67,7 @@ kiwisolver==1.4.3
     # via matplotlib
 lexid==2021.1006
     # via bumpver
-lxml==4.9.0
+lxml==4.9.1
     # via emarket-data-explorer (pyproject.toml)
 markupsafe==2.1.1
     # via jinja2
