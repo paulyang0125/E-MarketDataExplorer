@@ -67,7 +67,7 @@ kiwisolver==1.4.3
     # via matplotlib
 lexid==2021.1006
     # via bumpver
-lxml==4.9.0
+lxml==4.9.1
     # via emarket-data-explorer (pyproject.toml)
 markupsafe==2.1.1
     # via jinja2
@@ -96,7 +96,7 @@ pathlib2==2.3.7.post1
     # via bumpver
 pep517==0.12.0
     # via build
-pillow==9.1.1
+pillow==9.2.0
     # via matplotlib
 pip-tools==6.8.0
     # via emarket-data-explorer (pyproject.toml)
@@ -167,3 +167,4 @@ zipp==3.8.0
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
